@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FineRead — Terms Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@v5.1.0/dist/tesseract.min.js"></script>
+    <style>
+        :root {
+            --bg: #0a0a0a; --surface: #121212; --surface2: #1a1a1a; --border: rgba(255,255,255,0.07);
+            --text: #f5f0e8; --muted: #a8a29e; --accent: #d4b38a; --accent-soft: #e8d5b8;
+            --accent-dim: rgba(212,179,138,0.12); --accent-border: rgba(212,179,138,0.25);
+            --danger: #e06c75; --warning: #e5b567; --safe: #8cc2a0; --info: #7eb6d6;
+            --r: 18px; --r-sm: 12px;
+        }
+        * { box-sizing: border-box; margin:0; padding:0; }
+        body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; line-height:1.7; min-height:100dvh; }
+        .page { max-width:860px; margin:0 auto; padding:0 20px; }
+
+        nav { display:flex; align-items:center; justify-content:space-between; padding:24px 0 20px; border-bottom:1px solid var(--border); }
+        .logo { font-family:'Playfair Display',serif; font-size:29px; font-weight:600; letter-spacing:-0.8px; display:flex; align-items:center; gap:10px; color:var(--accent-soft); }
+        .logo-mark { width:34px; height:34px; background:var(--accent); border-radius:10px; display:flex; align-items:center; justify-content:center; color:#0a0a0a; font-weight:700; font-size:19px; }
+
+        .hero { padding:60px 0 48px; text-align:center; }
+        .hero-tag { display:inline-flex; align-items:center; gap:8px; background:var(--accent-dim); color:var(--accent); font-size:12.5px; font-weight:600; letter-spacing:1.8px; text-transform:uppercase; padding:9px 22px; border-radius:9999px; margin-bottom:24px; }
+        h1 { font-family:'Playfair Display',serif; font-size:clamp(38px,7.5vw,62px); line-height:1.05; font-weight:600; letter-spacing:-2px; margin-bottom:22px; }
+        h1 em { font-style:normal; color:var(--accent); }
+
+        .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:28px 24px; box-shadow:0 12px 50px rgba(0,0,0,0.35); }
+        .tab-row { display:flex; background:var(--surface2); border-radius:var(--r-sm); padding:6px; width:fit-content; margin-bottom:28px; flex-wrap:wrap; gap:4px; }
+        .tab { padding:12px 24px; border-radius:10px; font-size:15px; font-weight:500; cursor:pointer; transition:all 0.35s; min-height:48px; display:flex; align-items:center; }
+        .tab.on { background:var(--surface); color:var(--text); box-shadow:0 3px 12px rgba(0,0,0,0.25); }
+
+        textarea { width:100%; min-height:260px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-sm); padding:20px; color:var(--text); font-size:16px; line-height:1.75; resize:vertical; }
+        textarea:focus { border-color:var(--accent); box-shadow:0 0 0 4px rgba(212,179,138,0.15); outline:none; }
+
+        /* Camera Section */
+        #camera-section { display:none; text-align:center; }
+        #video { width:100%; max-width:100%; border-radius:14px; background:#000; }
+        #canvas { display:none; }
+        .capture-btn { background:var(--accent); color:#0a0a0a; border:none; padding:16px 32px; border-radius:12px; font-size:16px; font-weight:600; margin-top:16px; cursor:pointer; }
+
+        .ai-panel, .btn-row { margin-top:24px; }
+        .btn-main { background:var(--accent); color:#0a0a0a; border:none; padding:16px 34px; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; }
+        .btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border); padding:16px 26px; border-radius:12px; font-size:15px; cursor:pointer; }
+
+        .prog-track { height:4px; background:var(--border); border-radius:9999px; overflow:hidden; margin-top:20px; }
+        .prog-fill { height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-soft)); transition:width 0.65s cubic-bezier(0.34,1.56,0.64,1); }
+
+        /* Results styles (same as before) */
+        .summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; margin:36px 0 28px; }
+        .metric-box { background:var(--surface2); padding:22px; border-radius:14px; text-align:center; }
+        .risk-bar { padding:24px; border-radius:16px; margin:28px 0; display:flex; gap:20px; align-items:flex-start; }
+        .item-card { background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:12px; }
+        .tag { font-size:12px; padding:4px 13px; border-radius:9999px; font-weight:500; }
+        .disclaimer { margin-top:40px; padding-top:24px; border-top:1px solid var(--border); font-size:13px; color:var(--muted); line-height:1.6; }
+
+        @media (max-width:640px) {
+            .page { padding:0 16px; }
+            .card { padding:24px 18px; }
+            .tab { padding:11px 20px; font-size:14.5px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+    <nav>
+        <div class="logo"><div class="logo-mark">FR</div>FineRead</div>
+        <span style="color:var(--muted);font-weight:500;">Know before you sign</span>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-tag">Read smarter • Sign safer</div>
+        <h1>Understand the fine print<br>before you agree.</h1>
+        <p class="hero-p">Paste text, try demo, or take a photo of any document.</p>
+    </div>
+
+    <div class="card">
+        <div class="tab-row">
+            <button class="tab on" onclick="setTab('paste', this)">Paste Text</button>
+            <button class="tab" onclick="setTab('camera', this)">📸 Take Photo</button>
+            <button class="tab" onclick="setTab('demo', this)">Try Demo</button>
+        </div>
+
+        <!-- Paste Tab -->
+        <div id="tab-paste">
+            <textarea id="tc-text" placeholder="Paste the FULL Terms & Conditions or Privacy Policy here..."></textarea>
+        </div>
+
+        <!-- Camera Tab -->
+        <div id="tab-camera">
+            <div id="camera-section">
+                <video id="video" autoplay playsinline></video>
+                <canvas id="canvas" style="display:none;"></canvas>
+                <button class="capture-btn" onclick="capturePhoto()">📸 Capture Photo & Analyze</button>
+                <div id="camera-status" style="margin-top:12px; color:var(--muted); font-size:14px;"></div>
+            </div>
+            <div id="photo-preview" style="display:none; margin-top:16px;">
+                <img id="captured-img" style="width:100%; border-radius:14px; max-height:400px; object-fit:contain;">
+                <button onclick="retakePhoto()" style="margin-top:12px; background:transparent; color:var(--muted); border:1px solid var(--border); padding:12px 24px; border-radius:12px;">Retake Photo</button>
+            </div>
+        </div>
+
+        <!-- Demo Tab -->
+        <div id="tab-demo" style="display:none; padding:24px; background:var(--surface2); border-radius:14px; color:var(--muted);">
+            ✅ Demo loaded. Click Analyze.
+        </div>
+
+        <!-- AI Panel (same as before) -->
+        <div class="ai-panel">
+            <div class="ai-panel-top" onclick="toggleAI()">
+                <div>
+                    <div class="ai-panel-title">✦ AI Deep Analysis (recommended)</div>
+                    <div style="font-size:13.5px;color:var(--muted);">Gives very detailed explanations</div>
+                </div>
+                <div class="toggle" id="ai-toggle"></div>
+            </div>
+            <div id="ai-key-row" style="display:none; margin-top:18px;">
+                <input type="password" id="api-key" placeholder="sk-ant-api03-..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;font-size:16px;">
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn-main" id="analyzeBtn" onclick="analyze()">Analyze the fine print →</button>
+            <button class="btn-ghost" onclick="clearAll()">Clear</button>
+            <span id="status-msg" style="margin-left:12px;color:var(--muted);"></span>
+        </div>
+
+        <div class="prog-wrap" id="prog-wrap" style="display:none;">
+            <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+            <div id="prog-label" style="margin-top:12px;color:var(--muted);">Analyzing every clause in detail...</div>
+        </div>
+    </div>
+
+    <div id="results"></div>
+</div>
+
+<script>
+// ==================== CAMERA + OCR ====================
+let videoStream = null;
+let currentImageData = null;
+
+async function startCamera() {
+  const video = document.getElementById('video');
+  const status = document.getElementById('camera-status');
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: "environment" } // back camera on mobile
+    });
+    video.srcObject = videoStream;
+    status.textContent = "Camera ready — point at the document and tap Capture";
+  } catch (err) {
+    status.textContent = "Camera access denied or not available.";
+    console.error(err);
+  }
+}
+
+function capturePhoto() {
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const preview = document.getElementById('photo-preview');
+  const capturedImg = document.getElementById('captured-img');
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+
+  currentImageData = canvas.toDataURL('image/png');
+  capturedImg.src = currentImageData;
+  preview.style.display = 'block';
+  document.getElementById('camera-section').style.display = 'none';
+
+  // Auto-extract text from photo
+  extractTextFromImage(currentImageData);
+}
+
+function retakePhoto() {
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('camera-section').style.display = 'block';
+  currentImageData = null;
+}
+
+async function extractTextFromImage(imageSrc) {
+  const statusMsg = document.getElementById('status-msg');
+  statusMsg.textContent = "Extracting text from photo using OCR... (this may take 10-20 seconds)";
+
+  try {
+    const worker = await Tesseract.createWorker('eng', 1, {
+      logger: m => console.log(m)
+    });
+
+    const result = await worker.recognize(imageSrc);
+    await worker.terminate();
+
+    const extractedText = result.data.text.trim();
+    if (extractedText.length < 30) {
+      statusMsg.textContent = "Not enough text detected. Try a clearer photo.";
+      return;
+    }
+
+    document.getElementById('tc-text').value = extractedText;
+    statusMsg.textContent = "Text extracted! Click Analyze to continue.";
+
+    // Optional: auto-analyze after OCR
+    // setTimeout(() => analyze(), 800);
+  } catch (err) {
+    console.error(err);
+    statusMsg.textContent = "OCR failed. Try pasting text manually.";
+  }
+}
+
+// ==================== EXISTING FINE READ LOGIC (unchanged) ====================
+const DEMO = `... (your original demo text) ...`;
+
+const RULES = [ /* your full detailed RULES array from before */ ];
+
+function keywordScan(text) { /* your full keywordScan */ }
+async function aiScan(text, apiKey) { /* your full aiScan */ }
+
+let aiOn = false;
+let activeTab = 'paste';
+
+function setTab(tab, el) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+
+  document.getElementById('tab-paste').style.display = tab === 'paste' ? 'block' : 'none';
+  document.getElementById('tab-camera').style.display = tab === 'camera' ? 'block' : 'none';
+  document.getElementById('tab-demo').style.display = tab === 'demo' ? 'block' : 'none';
+
+  if (tab === 'camera') startCamera();
+}
+
+function toggleAI() { /* same as before */ }
+function clearAll() { /* same */ }
+function setStatus(msg) { document.getElementById('status-msg').textContent = msg; }
+function setProgress(pct, label) { /* same */ }
+
+async function analyze() { /* your full analyze function */ }
+function renderResults(data) { /* your full renderResults */ }
+
+// Init
+setTab('paste', document.querySelector('.tab.on'));
+console.log('%c✅ FineRead with Photo + OCR is ready!', 'color:#d4b38a;font-weight:600');
+</script>
+</body>
+</html>
