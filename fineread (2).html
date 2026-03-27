@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FineRead — Terms & Conditions Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a; --surface: #121212; --surface2: #1a1a1a;
+            --border: rgba(255,255,255,0.07); --text: #f5f0e8; --muted: #a8a29e;
+            --accent: #d4b38a; --accent-soft: #e8d5b8;
+            --accent-dim: rgba(212,179,138,0.12); --accent-border: rgba(212,179,138,0.25);
+            --danger: #e06c75; --warning: #e5b567; --safe: #8cc2a0; --info: #7eb6d6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; line-height: 1.7; }
+        .page { max-width: 860px; margin: 0 auto; padding: 0 18px 60px; }
+
+        nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 0 18px; border-bottom: 1px solid var(--border); }
+        .logo { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 600; display: flex; align-items: center; gap: 10px; color: var(--accent-soft); }
+        .logo-mark { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #0a0a0a; font-weight: 700; font-size: 17px; }
+
+        .hero { padding: 48px 0 40px; text-align: center; }
+        .hero-tag { display: inline-block; background: var(--accent-dim); color: var(--accent); font-size: 12px; font-weight: 600; letter-spacing: 1.6px; text-transform: uppercase; padding: 8px 20px; border-radius: 9999px; margin-bottom: 20px; }
+        h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 7vw, 56px); line-height: 1.08; font-weight: 600; letter-spacing: -1.5px; margin-bottom: 18px; }
+        .hero-p { font-size: 16px; color: var(--muted); max-width: 500px; margin: 0 auto; }
+
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 26px 22px; box-shadow: 0 12px 50px rgba(0,0,0,0.4); }
+
+        .tab-row { display: flex; background: var(--surface2); border-radius: 12px; padding: 5px; width: fit-content; margin-bottom: 24px; }
+        .tab { padding: 11px 24px; border-radius: 9px; font-size: 15px; font-weight: 500; cursor: pointer; background: transparent; border: none; color: var(--muted); min-height: 44px; }
+        .tab.on { background: var(--surface); color: var(--text); box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+
+        textarea {
+            width: 100%; min-height: 220px;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 12px; padding: 18px 20px;
+            color: var(--text); font-size: 16px; line-height: 1.7;
+            resize: vertical; display: block;
+            -webkit-appearance: none; -moz-appearance: none; appearance: none;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        textarea:focus { border-color: var(--accent); outline: none; }
+
+        .ai-panel { margin-top: 20px; padding: 20px; background: var(--accent-dim); border: 1px solid var(--accent-border); border-radius: 12px; }
+        .ai-top { display: flex; justify-content: space-between; align-items: center; cursor: pointer; gap: 16px; }
+        .toggle { width: 44px; height: 24px; background: #333; border-radius: 9999px; position: relative; flex-shrink: 0; transition: background 0.3s; }
+        .toggle.on { background: var(--accent); }
+        .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: transform 0.3s; }
+        .toggle.on::after { transform: translateX(20px); }
+
+        .btn-row { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+        .btn-main { background: var(--accent); color: #0a0a0a; border: none; padding: 15px 30px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; min-height: 50px; -webkit-appearance: none; }
+        .btn-main:disabled { opacity: 0.55; cursor: not-allowed; }
+        .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 15px 24px; border-radius: 12px; font-size: 15px; cursor: pointer; min-height: 50px; -webkit-appearance: none; }
+
+        #status-msg { margin-top: 12px; font-size: 14px; color: var(--danger); min-height: 18px; }
+
+        .prog-wrap { margin-top: 24px; }
+        .prog-track { height: 4px; background: var(--border); border-radius: 9999px; overflow: hidden; }
+        .prog-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-soft)); border-radius: 9999px; transition: width 0.5s ease; }
+        #prog-label { margin-top: 10px; color: var(--muted); font-size: 14px; }
+
+        #results { margin-top: 28px; }
+
+        .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+        @media(min-width:500px){ .summary-grid { grid-template-columns: repeat(4,1fr); } }
+        .metric-box { background: var(--surface2); padding: 20px 14px; border-radius: 14px; text-align: center; }
+        .metric-n { font-size: 30px; font-weight: 700; font-family: 'Playfair Display', serif; }
+        .metric-l { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+        .risk-banner { padding: 20px; border-radius: 14px; margin-bottom: 28px; display: flex; gap: 14px; align-items: flex-start; }
+        .section-label { font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--muted); margin: 28px 0 10px; }
+        .item-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 10px; }
+        .item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .item-title { font-size: 15px; font-weight: 600; flex: 1; }
+        .tags { display: flex; gap: 6px; flex-wrap: wrap; flex-shrink: 0; }
+        .tag { font-size: 11.5px; padding: 3px 11px; border-radius: 9999px; font-weight: 500; }
+        .tag-danger  { background: rgba(224,108,117,0.2); color: var(--danger); }
+        .tag-warning { background: rgba(229,181,103,0.2); color: var(--warning); }
+        .tag-info    { background: rgba(126,182,214,0.2); color: var(--info); }
+        .tag-neutral { background: rgba(255,255,255,0.08); color: var(--muted); }
+        .item-detail { font-size: 14.5px; color: var(--muted); line-height: 1.7; }
+        .disclaimer { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); line-height: 1.6; }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <nav>
+        <div class="logo"><div class="logo-mark">FR</div>FineRead</div>
+        <span style="color:var(--muted);font-size:14px;font-weight:500;">Know before you sign</span>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-tag">Read smarter · Sign safer</div>
+        <h1>Understand the fine print<br>before you agree.</h1>
+        <p class="hero-p">Paste any Terms &amp; Conditions or Privacy Policy for an instant plain-English breakdown.</p>
+    </div>
+
+    <div class="card">
+        <div class="tab-row">
+            <button class="tab on" id="tab-paste-btn" onclick="setTab('paste')">Paste Text</button>
+            <button class="tab" id="tab-demo-btn" onclick="setTab('demo')">Try Demo</button>
+        </div>
+
+        <div id="paste-panel">
+            <textarea id="tc-text" placeholder="Paste the full Terms &amp; Conditions or Privacy Policy here…"></textarea>
+        </div>
+        <div id="demo-panel" style="display:none; padding:20px; background:var(--surface2); border-radius:12px; color:var(--muted); font-size:15px;">
+            ✅ Demo text loaded. Hit <strong style="color:var(--text);">Analyze</strong> to see the breakdown.
+        </div>
+
+        <div class="ai-panel">
+            <div class="ai-top" onclick="toggleAI()">
+                <div>
+                    <div style="font-weight:600;color:var(--accent-soft);">✦ AI Deep Analysis</div>
+                    <div style="font-size:13px;color:var(--muted);margin-top:2px;">More detailed — needs an Anthropic API key</div>
+                </div>
+                <div class="toggle" id="ai-toggle"></div>
+            </div>
+            <div id="ai-key-row" style="display:none;margin-top:16px;">
+                <input type="password" id="api-key" placeholder="sk-ant-api03-…"
+                    style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;font-size:16px;color:var(--text);-webkit-appearance:none;outline:none;">
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn-main" id="analyzeBtn" onclick="analyze()">Analyze →</button>
+            <button class="btn-ghost" onclick="clearAll()">Clear</button>
+        </div>
+        <div id="status-msg"></div>
+
+        <div class="prog-wrap" id="prog-wrap" style="display:none;">
+            <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+            <div id="prog-label">Scanning…</div>
+        </div>
+    </div>
+
+    <div id="results"></div>
+
+</div><!-- .page -->
+
+<script>
+/* ── DEMO TEXT ── */
+var DEMO = "Terms of Service\n\n1. Data Collection\nWe collect location data, browsing habits, contact lists, microphone and camera access logs, and device identifiers. We may share this data with third-party advertisers, data brokers, and business partners without additional notice.\n\n2. Content Ownership\nAny content you post grants us a perpetual, irrevocable, worldwide, royalty-free license. You waive any moral rights. We may use your likeness in promotional materials.\n\n3. Account Termination\nWe may terminate your account at any time, without notice. We will retain your data indefinitely.\n\n4. Arbitration\nYou agree to binding arbitration. You waive your right to participate in any class action lawsuit.\n\n5. Billing\nYour subscription automatically renews. You must cancel at least 48 hours before renewal.\n\n6. Jurisdiction\nGoverning law is Delaware. You consent to jurisdiction of Delaware courts.\n\n7. Changes\nWe may modify these terms at any time without notice. Continued use constitutes acceptance.\n\n8. Liability\nLimitation of liability: our total liability is capped at $100.";
+
+/* ── RULES — plain lowercase string search, zero regex ── */
+var RULES = [
+  { str:'perpetual',           sev:'danger',  type:'right_waived', cat:'Content Rights', title:'Permanent content license',         detail:'You give the company a permanent, royalty-free license to use anything you post — forever. Even if you delete your account they can still use your photos, videos, and posts in ads or products without asking or paying you.' },
+  { str:'irrevocable',         sev:'danger',  type:'right_waived', cat:'Content Rights', title:'Irrevocable rights granted',        detail:'Once you post content you cannot take back the rights you gave the company. They can keep using your material indefinitely, even after you leave the platform.' },
+  { str:'royalty-free',        sev:'warning', type:'right_waived', cat:'Content Rights', title:'No payment for your content',       detail:'The company can use your content commercially without ever paying you. You are licensing your creative work for free.' },
+  { str:'royalty free',        sev:'warning', type:'right_waived', cat:'Content Rights', title:'No payment for your content',       detail:'The company can use your content commercially without ever paying you. You are licensing your creative work for free.' },
+  { str:'class action',        sev:'danger',  type:'right_waived', cat:'Legal Rights',   title:'Class action waiver',               detail:'You are giving up your right to join a class-action lawsuit — often the only practical way for individuals to hold large companies accountable. You can only sue alone, which is expensive and rarely worth it.' },
+  { str:'binding arbitration', sev:'danger',  type:'right_waived', cat:'Legal Rights',   title:'Forced private arbitration',        detail:'Disputes go through private arbitration instead of a public court. Arbitrators are often hired by companies and statistically favor them. You also lose the right to a jury trial.' },
+  { str:'third-party',         sev:'danger',  type:'risk',         cat:'Data & Privacy', title:'Data shared with third parties',    detail:'Your personal data can be shared with advertisers, data brokers, and business partners — companies you never agreed to share with.' },
+  { str:'third party',         sev:'danger',  type:'risk',         cat:'Data & Privacy', title:'Data shared with third parties',    detail:'Your personal data can be shared with advertisers, data brokers, and business partners — companies you never agreed to share with.' },
+  { str:'data brokers',        sev:'danger',  type:'risk',         cat:'Data & Privacy', title:'Data sold to data brokers',         detail:'Data brokers buy and resell personal information. Once shared, your data can end up anywhere — sold to marketers, insurers, or people searching for you.' },
+  { str:'location data',       sev:'warning', type:'obligation',   cat:'Data & Privacy', title:'Location tracking',                 detail:'Your precise location is collected. This reveals where you live, work, sleep, and travel, and is often stored for years and shared with advertisers.' },
+  { str:'microphone',          sev:'warning', type:'obligation',   cat:'Data & Privacy', title:'Microphone access',                 detail:'The service can access your microphone. This is one of the most invasive permissions an app can request and is rarely necessary for the core function.' },
+  { str:'contact list',        sev:'warning', type:'obligation',   cat:'Data & Privacy', title:'Contact list access',               detail:'Your contacts — people who never agreed to this service — can be collected and stored, often used to build social graphs for advertisers.' },
+  { str:'automatically renew', sev:'warning', type:'obligation',   cat:'Financial',      title:'Auto-renewal billing',              detail:'Your subscription charges you automatically every period. Many people get billed for months without realizing it. You must actively cancel before the renewal date.' },
+  { str:'auto-renew',          sev:'warning', type:'obligation',   cat:'Financial',      title:'Auto-renewal billing',              detail:'Your subscription charges you automatically every period. You must actively cancel before the renewal date or you will be charged again.' },
+  { str:'cancel at least',     sev:'warning', type:'obligation',   cat:'Financial',      title:'Early cancellation required',       detail:'You must cancel days or hours before renewal — not on the day it charges. Missing this window by even a few hours means you pay for another full period.' },
+  { str:'without notice',      sev:'warning', type:'risk',         cat:'Account',        title:'Actions without prior warning',     detail:'The company can make significant changes — including suspending your account or changing the terms — without giving you any advance warning.' },
+  { str:'terminate your account', sev:'warning', type:'risk',      cat:'Account',        title:'Account can be deleted anytime',    detail:'They can delete your account at any time, for any reason, without telling you first. Everything stored — messages, purchases, data — can disappear overnight.' },
+  { str:'retain your data',    sev:'warning', type:'obligation',   cat:'Data & Privacy', title:'Data kept after you leave',         detail:'Deleting your account does not delete your data. The company can keep everything they collected about you, potentially forever.' },
+  { str:'indefinitely',        sev:'warning', type:'obligation',   cat:'Data & Privacy', title:'Indefinite data retention',         detail:'There is no time limit on how long they keep your personal information. Your data may be stored and used long after you stop using the service.' },
+  { str:'modify these terms',  sev:'warning', type:'risk',         cat:'Legal Rights',   title:'Terms can change anytime',          detail:'The company can rewrite the rules whenever they want. Usually you will not be directly notified, and simply using the app is treated as accepting whatever the new terms say.' },
+  { str:'continued use',       sev:'info',    type:'obligation',   cat:'Legal Rights',   title:'Using = agreeing',                  detail:'Continuing to use the service after any change automatically counts as your legal agreement to the updated terms, even if you never read them.' },
+  { str:'governing law',       sev:'info',    type:'obligation',   cat:'Legal Rights',   title:'Foreign jurisdiction',              detail:'Legal disputes must be handled under the laws of a specific state or country. This often makes it very difficult and expensive for you to take legal action.' },
+  { str:'delaware',            sev:'info',    type:'obligation',   cat:'Legal Rights',   title:'Delaware jurisdiction',             detail:'Cases must be filed in Delaware courts. Unless you live there, this effectively makes suing them cost-prohibitive for most users.' },
+  { str:'limitation of liability', sev:'warning', type:'risk',    cat:'Legal Rights',   title:'Company liability capped',          detail:'Even if the company causes you real harm, the most they will pay is usually $100 or less. This clause essentially lets them off the hook for major damages.' },
+  { str:'likeness',            sev:'danger',  type:'right_waived', cat:'Content Rights', title:'Your face used in ads',             detail:'They can use your photos or videos in advertisements and marketing without asking you again. This is common in social platforms and very difficult to undo.' },
+  { str:'waive',               sev:'warning', type:'right_waived', cat:'Legal Rights',   title:'Rights waived',                     detail:'You are explicitly giving up one or more legal rights. Read this section carefully to understand exactly what you are surrendering.' },
+  { str:'sell your data',      sev:'danger',  type:'risk',         cat:'Data & Privacy', title:'Data sold',                         detail:'The company can directly sell your personal information to other businesses. Once sold, you have no control over how it is used.' },
+  { str:'device identifier',   sev:'info',    type:'obligation',   cat:'Data & Privacy', title:'Device fingerprinting',             detail:'Unique IDs from your phone or computer are collected. These can track you across apps and websites even if you clear your cookies.' },
+  { str:'browsing habits',     sev:'warning', type:'obligation',   cat:'Data & Privacy', title:'Browsing history tracked',          detail:'What websites and content you look at is recorded. This builds a detailed profile of your interests and behaviour typically sold to advertisers.' },
+  { str:'moral rights',        sev:'danger',  type:'right_waived', cat:'Content Rights', title:'Moral rights waived',               detail:'Moral rights protect your connection to your own creative work. Waiving them means the company can alter, repurpose, or remove attribution from your content freely.' },
+];
+
+/* ── STATE ── */
+var aiOn = false;
+var activeTab = 'paste';
+
+function setTab(tab) {
+  activeTab = tab;
+  document.getElementById('tab-paste-btn').className = 'tab' + (tab === 'paste' ? ' on' : '');
+  document.getElementById('tab-demo-btn').className  = 'tab' + (tab === 'demo'  ? ' on' : '');
+  document.getElementById('paste-panel').style.display = tab === 'paste' ? 'block' : 'none';
+  document.getElementById('demo-panel').style.display  = tab === 'demo'  ? 'block' : 'none';
+}
+
+function toggleAI() {
+  aiOn = !aiOn;
+  document.getElementById('ai-toggle').className = 'toggle' + (aiOn ? ' on' : '');
+  document.getElementById('ai-key-row').style.display = aiOn ? 'block' : 'none';
+}
+
+function clearAll() {
+  document.getElementById('tc-text').value = '';
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('status-msg').textContent = '';
+  document.getElementById('prog-wrap').style.display = 'none';
+}
+
+function setStatus(msg) {
+  document.getElementById('status-msg').textContent = msg;
+}
+
+function setProgress(pct, lbl) {
+  document.getElementById('prog-fill').style.width = pct + '%';
+  if (lbl !== undefined) document.getElementById('prog-label').textContent = lbl;
+}
+
+/* ── KEYWORD SCAN — plain indexOf, no regex ── */
+function keywordScan(text) {
+  var lower = text.toLowerCase();
+  var found = [];
+  var seen  = {};
+
+  for (var i = 0; i < RULES.length; i++) {
+    var r = RULES[i];
+    if (seen[r.title]) continue;
+    if (lower.indexOf(r.str) !== -1) {
+      seen[r.title] = true;
+      found.push({ cat: r.cat, sev: r.sev, type: r.type, title: r.title, detail: r.detail });
+    }
+  }
+
+  var catMap = {};
+  for (var j = 0; j < found.length; j++) {
+    var f = found[j];
+    if (!catMap[f.cat]) catMap[f.cat] = [];
+    catMap[f.cat].push(f);
+  }
+  var sections = [];
+  var catKeys = Object.keys(catMap);
+  for (var k = 0; k < catKeys.length; k++) {
+    sections.push({ category: catKeys[k], items: catMap[catKeys[k]] });
+  }
+
+  var dangers = 0, obligations = 0, risks = 0, waived = 0;
+  for (var d = 0; d < found.length; d++) {
+    if (found[d].sev === 'danger') dangers++;
+    if (found[d].type === 'obligation') obligations++;
+    if (found[d].type === 'risk') risks++;
+    if (found[d].type === 'right_waived') waived++;
+  }
+
+  var risk = dangers >= 3 ? 'high' : dangers >= 1 ? 'medium' : 'low';
+  var summary = found.length === 0
+    ? 'No flagged clauses detected by keyword scan. The document may not contain standard risky language — try AI mode for deeper analysis.'
+    : dangers >= 3
+      ? 'This agreement has ' + dangers + ' high-severity clauses that significantly limit your rights. Review carefully.'
+      : dangers >= 1
+        ? 'Some concerning clauses were found. Check the items marked danger before agreeing.'
+        : 'No critical clauses found, but some items are worth reviewing before you sign.';
+
+  return {
+    method: 'keyword', overall_risk: risk, risk_summary: summary,
+    counts: { obligations: obligations, risks: risks, rights_waived: waived },
+    sections: sections
+  };
+}
+
+/* ── AI SCAN ── */
+function aiScan(text, apiKey) {
+  return fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 2200,
+      system: 'You are an expert lawyer. Return ONLY valid JSON with no markdown, no backticks, no extra text.',
+      messages: [{
+        role: 'user',
+        content: 'Analyze these Terms & Conditions. Return ONLY this JSON (no backticks):\n{"overall_risk":"low|medium|high","risk_summary":"2 sentences","counts":{"obligations":0,"risks":0,"rights_waived":0},"sections":[{"category":"Data & Privacy","items":[{"title":"short title","detail":"2-4 plain English sentences","severity":"danger|warning|info|neutral","type":"obligation|risk|right_waived"}]}]}\n\nTEXT:\n' + text.substring(0, 15000)
+      }]
+    })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (data.error) throw new Error(data.error.message);
+    var raw = '';
+    for (var i = 0; i < data.content.length; i++) { raw += (data.content[i].text || ''); }
+    raw = raw.replace(/```json/g, '').replace(/```/g, '').trim();
+    var parsed = JSON.parse(raw);
+    parsed.method = 'ai';
+    return parsed;
+  });
+}
+
+/* ── MAIN ANALYZE ── */
+function analyze() {
+  var text = activeTab === 'demo' ? DEMO : (document.getElementById('tc-text').value || '').trim();
+
+  if (!text || text.length < 20) {
+    setStatus('Please paste some text first.');
+    return;
+  }
+
+  var apiKey = (document.getElementById('api-key').value || '').trim();
+  if (aiOn && !apiKey) {
+    setStatus('Enter your Anthropic API key to use AI mode.');
+    return;
+  }
+
+  var btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  setStatus('');
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('prog-wrap').style.display = 'block';
+  setProgress(5, aiOn ? 'Sending to Claude AI…' : 'Scanning for risky clauses…');
+
+  var prog = 5;
+  var ticker = setInterval(function() {
+    prog = Math.min(prog + (aiOn ? 5 : 18), 88);
+    setProgress(prog);
+  }, aiOn ? 500 : 90);
+
+  var promise = aiOn ? aiScan(text, apiKey) : Promise.resolve(keywordScan(text));
+
+  promise.then(function(result) {
+    clearInterval(ticker);
+    setProgress(100, 'Complete!');
+    setTimeout(function() {
+      document.getElementById('prog-wrap').style.display = 'none';
+      showResults(result);
+      btn.disabled = false;
+    }, 300);
+  }).catch(function(err) {
+    clearInterval(ticker);
+    document.getElementById('prog-wrap').style.display = 'none';
+    setStatus('Error: ' + (err.message || 'Something went wrong.'));
+    btn.disabled = false;
+  });
+}
+
+/* ── RENDER RESULTS ── */
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showResults(data) {
+  var riskCfg = {
+    high:   { icon:'⚠️', bg:'rgba(224,108,117,0.12)', border:'rgba(224,108,117,0.45)', color:'#e06c75', label:'High Risk' },
+    medium: { icon:'◈',  bg:'rgba(229,181,103,0.12)', border:'rgba(229,181,103,0.45)', color:'#e5b567', label:'Medium Risk' },
+    low:    { icon:'✅', bg:'rgba(140,194,160,0.12)', border:'rgba(140,194,160,0.45)', color:'#8cc2a0', label:'Low Risk' }
+  };
+  var rc = riskCfg[data.overall_risk] || riskCfg.medium;
+
+  var typeLabel = { obligation:'Obligation', risk:'Risk', right_waived:'Right Waived' };
+  var typeClass  = { obligation:'tag-info', risk:'tag-danger', right_waived:'tag-warning' };
+  var sevClass   = { danger:'tag-danger', warning:'tag-warning', info:'tag-info', neutral:'tag-neutral' };
+
+  var c = data.counts || { obligations: 0, risks: 0, rights_waived: 0 };
+
+  var html = '';
+
+  /* metric grid */
+  html += '<div class="summary-grid">'
+        + '<div class="metric-box"><div class="metric-n">' + (c.obligations||0) + '</div><div class="metric-l">Obligations</div></div>'
+        + '<div class="metric-box"><div class="metric-n">' + (c.risks||0) + '</div><div class="metric-l">Risks</div></div>'
+        + '<div class="metric-box"><div class="metric-n">' + (c.rights_waived||0) + '</div><div class="metric-l">Rights Waived</div></div>'
+        + '<div class="metric-box" style="background:' + rc.bg + ';border:1px solid ' + rc.border + ';">'
+        + '<div class="metric-n" style="color:' + rc.color + ';font-size:20px;">' + rc.icon + ' ' + rc.label + '</div>'
+        + '<div class="metric-l" style="color:' + rc.color + ';">' + (data.method === 'ai' ? 'AI analysis' : 'Keyword scan') + '</div>'
+        + '</div></div>';
+
+  /* risk banner */
+  html += '<div class="risk-banner" style="background:' + rc.bg + ';border:1px solid ' + rc.border + ';">'
+        + '<div style="font-size:26px;line-height:1;flex-shrink:0;">' + rc.icon + '</div>'
+        + '<div><div style="color:' + rc.color + ';font-size:17px;font-weight:600;margin-bottom:6px;">' + rc.label + '</div>'
+        + '<div style="color:' + rc.color + ';opacity:0.9;font-size:14.5px;">' + esc(data.risk_summary) + '</div></div></div>';
+
+  /* sections */
+  var sections = data.sections || [];
+  if (sections.length === 0) {
+    html += '<div style="padding:24px;background:var(--surface2);border-radius:14px;color:var(--muted);text-align:center;">'
+          + 'No flagged clauses detected. Try the <strong>Demo</strong> tab to test the analyzer, or enable AI mode for deeper analysis.'
+          + '</div>';
+  } else {
+    for (var s = 0; s < sections.length; s++) {
+      var sec = sections[s];
+      if (!sec.items || sec.items.length === 0) continue;
+      html += '<div class="section-label">' + esc(sec.category) + '</div>';
+      for (var i = 0; i < sec.items.length; i++) {
+        var item = sec.items[i];
+        var tc = typeClass[item.type]     || 'tag-neutral';
+        var sc = sevClass[item.severity]  || 'tag-neutral';
+        var tl = typeLabel[item.type]     || (item.type || '');
+        html += '<div class="item-card">'
+              + '<div class="item-head">'
+              + '<div class="item-title">' + esc(item.title) + '</div>'
+              + '<div class="tags">'
+              + '<span class="tag ' + tc + '">' + esc(tl) + '</span>'
+              + '<span class="tag ' + sc + '">' + esc(item.severity) + '</span>'
+              + '</div></div>'
+              + '<div class="item-detail">' + esc(item.detail) + '</div>'
+              + '</div>';
+      }
+    }
+  }
+
+  html += '<div class="disclaimer">For informational purposes only — not legal advice. Consult a qualified lawyer for legal decisions.</div>';
+
+  var el = document.getElementById('results');
+  el.innerHTML = html;
+
+  /* scroll after paint */
+  setTimeout(function() {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
+</script>
+</body>
+</html>
