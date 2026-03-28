@@ -1,425 +1,2122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FineRead — Terms & Conditions Analyzer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #0a0a0a; --surface: #121212; --surface2: #1a1a1a;
-            --border: rgba(255,255,255,0.07); --text: #f5f0e8; --muted: #a8a29e;
-            --accent: #d4b38a; --accent-soft: #e8d5b8;
-            --accent-dim: rgba(212,179,138,0.12); --accent-border: rgba(212,179,138,0.25);
-            --danger: #e06c75; --warning: #e5b567; --safe: #8cc2a0; --info: #7eb6d6;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; line-height: 1.7; }
-        .page { max-width: 860px; margin: 0 auto; padding: 0 18px 60px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://api.anthropic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://api.allorigins.win; worker-src blob:; frame-src 'none'; object-src 'none';">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="Referrer-Policy" content="no-referrer">
+<title>FineRead — Know Before You Sign</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@v5.1.0/dist/tesseract.min.js"></script>
+<style>
+:root {
+  /* Palette: pure black/white/dark grey — monochrome modern */
+  --bg:           #080808;
+  --bg2:          #0e0e0e;
+  --surface:      #111111;
+  --surface2:     #181818;
+  --surface3:     #212121;
+  --surface4:     #2a2a2a;
+  --border:       rgba(255,255,255,0.06);
+  --border2:      rgba(255,255,255,0.10);
+  --border3:      rgba(255,255,255,0.18);
+  --text:         #f2f2f2;
+  --text2:        #b8b8b8;
+  --muted:        #666666;
+  --muted2:       #909090;
+  --accent:       #e2e2e2;
+  --accent2:      #ffffff;
+  --accent3:      #c8c8c8;
+  --accent-dim:   rgba(255,255,255,0.06);
+  --accent-glow:  rgba(255,255,255,0.08);
+  --accent-border:rgba(255,255,255,0.18);
+  --danger:       #f87171;
+  --danger-dim:   rgba(248,113,113,0.10);
+  --danger-border:rgba(248,113,113,0.28);
+  --warning:      #fbbf24;
+  --warning-dim:  rgba(251,191,36,0.10);
+  --warning-border:rgba(251,191,36,0.28);
+  --safe:         #34d399;
+  --safe-dim:     rgba(52,211,153,0.10);
+  --safe-border:  rgba(52,211,153,0.28);
+  --info:         #94a3b8;
+  --info-dim:     rgba(148,163,184,0.10);
+  --r:            18px;
+  --r-sm:         12px;
+  --r-xs:         8px;
+}
 
-        nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 0 18px; border-bottom: 1px solid var(--border); }
-        .logo { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 600; display: flex; align-items: center; gap: 10px; color: var(--accent-soft); }
-        .logo-mark { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #0a0a0a; font-weight: 700; font-size: 17px; }
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
 
-        .hero { padding: 48px 0 40px; text-align: center; }
-        .hero-tag { display: inline-block; background: var(--accent-dim); color: var(--accent); font-size: 12px; font-weight: 600; letter-spacing: 1.6px; text-transform: uppercase; padding: 8px 20px; border-radius: 9999px; margin-bottom: 20px; }
-        h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 7vw, 56px); line-height: 1.08; font-weight: 600; letter-spacing: -1.5px; margin-bottom: 18px; }
-        .hero-p { font-size: 16px; color: var(--muted); max-width: 500px; margin: 0 auto; }
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  line-height:1.6;
+  min-height:100dvh;
+  overflow-x:hidden;
+}
 
-        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 26px 22px; box-shadow: 0 12px 50px rgba(0,0,0,0.4); }
+/* ── BACKGROUND MESH ── */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% -5%, rgba(255,255,255,0.025) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 105%, rgba(255,255,255,0.015) 0%, transparent 60%);
+  pointer-events:none;
+  z-index:0;
+}
 
-        .tab-row { display: flex; background: var(--surface2); border-radius: 12px; padding: 5px; width: fit-content; margin-bottom: 24px; }
-        .tab { padding: 11px 24px; border-radius: 9px; font-size: 15px; font-weight: 500; cursor: pointer; background: transparent; border: none; color: var(--muted); min-height: 44px; }
-        .tab.on { background: var(--surface); color: var(--text); box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+body::after{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size:60px 60px;
+  pointer-events:none;
+  z-index:0;
+}
 
-        textarea {
-            width: 100%; min-height: 220px;
-            background: var(--surface2); border: 1px solid var(--border);
-            border-radius: 12px; padding: 18px 20px;
-            color: var(--text); font-size: 16px; line-height: 1.7;
-            resize: vertical; display: block;
-            -webkit-appearance: none; -moz-appearance: none; appearance: none;
-            font-family: 'Inter', system-ui, sans-serif;
-        }
-        textarea:focus { border-color: var(--accent); outline: none; }
+.page{
+  max-width:900px;
+  margin:0 auto;
+  padding:0 24px;
+  position:relative;
+  z-index:1;
+}
 
-        .ai-panel { margin-top: 20px; padding: 20px; background: var(--accent-dim); border: 1px solid var(--accent-border); border-radius: 12px; }
-        .ai-top { display: flex; justify-content: space-between; align-items: center; cursor: pointer; gap: 16px; }
-        .toggle { width: 44px; height: 24px; background: #333; border-radius: 9999px; position: relative; flex-shrink: 0; transition: background 0.3s; }
-        .toggle.on { background: var(--accent); }
-        .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: transform 0.3s; }
-        .toggle.on::after { transform: translateX(20px); }
+/* ── NAV ── */
+nav{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:24px 0 20px;
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
 
-        .btn-row { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
-        .btn-main { background: var(--accent); color: #0a0a0a; border: none; padding: 15px 30px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; min-height: 50px; -webkit-appearance: none; }
-        .btn-main:disabled { opacity: 0.55; cursor: not-allowed; }
-        .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 15px 24px; border-radius: 12px; font-size: 15px; cursor: pointer; min-height: 50px; -webkit-appearance: none; }
+.logo{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  text-decoration:none;
+}
+.logo-mark{
+  width:36px;height:36px;
+  background:linear-gradient(135deg,#3a3a3a,#555555);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:13px;font-family:'Inter',sans-serif;
+  color:#f2f2f2;letter-spacing:.5px;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.1);
+}
+.logo-text{
+  font-family:'Instrument Serif',serif;
+  font-size:24px;
+  color:var(--text);
+  letter-spacing:-.3px;
+}
+.logo-text span{color:var(--accent2);}
 
-        #status-msg { margin-top: 12px; font-size: 14px; color: var(--danger); min-height: 18px; }
+.nav-right{display:flex;align-items:center;gap:12px;}
 
-        .prog-wrap { margin-top: 24px; }
-        .prog-track { height: 4px; background: var(--border); border-radius: 9999px; overflow: hidden; }
-        .prog-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-soft)); border-radius: 9999px; transition: width 0.5s ease; }
-        #prog-label { margin-top: 10px; color: var(--muted); font-size: 14px; }
+.nav-pill{
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  color:var(--muted2);
+  padding:7px 14px;
+  border-radius:9999px;
+  font-size:12.5px;
+  font-weight:500;
+  letter-spacing:.3px;
+  display:none; /* desktop only */
+}
+@media(min-width:600px){.nav-pill{display:block;}}
 
-        #results { margin-top: 28px; }
+.history-btn{
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  color:var(--muted2);
+  padding:8px 14px;
+  border-radius:var(--r-xs);
+  font-size:13px;
+  font-weight:500;
+  cursor:pointer;
+  font-family:'Inter',sans-serif;
+  display:flex;align-items:center;gap:6px;
+  transition:all .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.history-btn:hover{color:var(--text);border-color:var(--border3);}
 
-        .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
-        @media(min-width:500px){ .summary-grid { grid-template-columns: repeat(4,1fr); } }
-        .metric-box { background: var(--surface2); padding: 20px 14px; border-radius: 14px; text-align: center; }
-        .metric-n { font-size: 30px; font-weight: 700; font-family: 'Playfair Display', serif; }
-        .metric-l { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.history-panel{
+  display:none;
+  position:absolute;
+  top:calc(100% + 10px);
+  right:0;
+  width:310px;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:var(--r);
+  padding:16px;
+  z-index:200;
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
+}
+.history-panel.open{display:block;}
+.history-panel-title{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.history-item{padding:10px 12px;border-radius:var(--r-xs);cursor:pointer;transition:background .15s;margin-bottom:3px;}
+.history-item:hover{background:var(--surface2);}
+.history-item-title{font-size:13.5px;font-weight:500;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.history-item-meta{font-size:11.5px;color:var(--muted);display:flex;gap:8px;align-items:center;}
+.history-empty{font-size:13px;color:var(--muted);text-align:center;padding:16px 0;}
+.history-footer{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);text-align:right;}
+.history-footer button{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;}
+.history-footer button:hover{color:var(--danger);}
 
-        .risk-banner { padding: 20px; border-radius: 14px; margin-bottom: 28px; display: flex; gap: 14px; align-items: flex-start; }
-        .section-label { font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--muted); margin: 28px 0 10px; }
-        .item-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 10px; }
-        .item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-        .item-title { font-size: 15px; font-weight: 600; flex: 1; }
-        .tags { display: flex; gap: 6px; flex-wrap: wrap; flex-shrink: 0; }
-        .tag { font-size: 11.5px; padding: 3px 11px; border-radius: 9999px; font-weight: 500; }
-        .tag-danger  { background: rgba(224,108,117,0.2); color: var(--danger); }
-        .tag-warning { background: rgba(229,181,103,0.2); color: var(--warning); }
-        .tag-info    { background: rgba(126,182,214,0.2); color: var(--info); }
-        .tag-neutral { background: rgba(255,255,255,0.08); color: var(--muted); }
-        .item-detail { font-size: 14.5px; color: var(--muted); line-height: 1.7; }
-        .disclaimer { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); line-height: 1.6; }
-    </style>
+/* ── HERO ── */
+.hero{
+  padding:72px 0 56px;
+  text-align:center;
+}
+
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent-dim);
+  border:1px solid var(--accent-border);
+  color:var(--accent3);
+  font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+  padding:7px 20px;border-radius:9999px;
+  margin-bottom:32px;
+}
+.hero-eyebrow-dot{
+  width:6px;height:6px;background:var(--accent2);border-radius:50%;
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{
+  0%,100%{opacity:1;transform:scale(1);}
+  50%{opacity:.5;transform:scale(.8);}
+}
+
+h1{
+  font-family:'Instrument Serif',serif;
+  font-size:clamp(38px,7.5vw,68px);
+  line-height:1.04;
+  font-weight:400;
+  letter-spacing:-2px;
+  margin-bottom:24px;
+  color:var(--text);
+}
+h1 em{
+  font-style:italic;
+  background:linear-gradient(135deg,#ffffff,#a0a0a0);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero-sub{
+  color:var(--muted2);
+  font-size:16.5px;
+  max-width:460px;
+  margin:0 auto 40px;
+  font-weight:300;
+  line-height:1.7;
+}
+
+/* stats row */
+.hero-stats{
+  display:flex;align-items:center;justify-content:center;gap:0;
+  margin-bottom:0;
+}
+.hero-stat{
+  padding:0 28px;
+  text-align:center;
+}
+.hero-stat+.hero-stat{border-left:1px solid var(--border2);}
+.hero-stat-val{
+  font-family:'Instrument Serif',serif;
+  font-size:26px;
+  color:var(--accent2);
+  letter-spacing:-1px;
+  line-height:1;
+  margin-bottom:4px;
+}
+.hero-stat-label{font-size:12px;color:var(--muted);font-weight:400;}
+
+/* ── MAIN CARD ── */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:22px;
+  padding:32px 28px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.03),
+    0 24px 80px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* ── TABS ── */
+.tab-row{
+  display:flex;
+  background:var(--surface2);
+  border-radius:12px;
+  padding:4px;
+  width:100%;
+  margin-bottom:26px;
+  gap:2px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.tab-row::-webkit-scrollbar{display:none;}
+
+.tab{
+  padding:9px 16px;
+  border-radius:9px;
+  font-size:13px;font-weight:500;
+  cursor:pointer;
+  transition:all .2s;
+  min-height:40px;
+  display:flex;align-items:center;gap:6px;
+  border:none;background:transparent;
+  color:var(--muted);
+  white-space:nowrap;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+  font-family:'Inter',sans-serif;
+  letter-spacing:.1px;
+}
+.tab.on{
+  background:var(--surface3);
+  color:var(--text);
+  box-shadow:0 1px 8px rgba(0,0,0,0.4);
+}
+.tab:hover:not(.on){color:var(--text2);}
+
+/* ── PASTE ── */
+.paste-wrap{position:relative;}
+textarea{
+  width:100%;min-height:220px;
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-radius:var(--r-sm);
+  padding:18px 18px 42px;
+  color:var(--text);
+  font-size:15px;
+  font-family:'Inter',sans-serif;
+  line-height:1.7;
+  resize:vertical;
+  transition:border-color .2s,box-shadow .2s;
+}
+textarea:focus{
+  border-color:var(--accent-border);
+  box-shadow:0 0 0 3px var(--accent-glow);
+  outline:none;
+}
+textarea::placeholder{color:var(--muted);}
+.char-counter{
+  position:absolute;bottom:12px;right:14px;
+  font-size:11.5px;color:var(--muted);
+  pointer-events:none;
+  font-variant-numeric:tabular-nums;
+}
+.char-counter.warn{color:var(--warning);}
+
+/* ── URL ── */
+#tab-url{display:none;}
+.url-row{display:flex;gap:10px;}
+.url-row input{
+  flex:1;min-width:0;
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-radius:var(--r-sm);
+  padding:14px 16px;
+  color:var(--text);
+  font-size:14.5px;font-family:'Inter',sans-serif;
+  transition:border-color .2s;
+}
+.url-row input:focus{border-color:var(--accent-border);box-shadow:0 0 0 3px var(--accent-glow);outline:none;}
+.url-row input::placeholder{color:var(--muted);}
+.url-go{
+  background:var(--accent2);color:#0a0a0a;
+  border:none;padding:0 22px;
+  border-radius:var(--r-sm);
+  font-size:14px;font-weight:600;
+  cursor:pointer;font-family:'Inter',sans-serif;
+  white-space:nowrap;
+  transition:opacity .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.url-go:hover{opacity:.85;}
+.url-go:disabled{opacity:.4;cursor:not-allowed;}
+#url-status{margin-top:10px;font-size:13px;color:var(--muted);min-height:18px;}
+
+/* ── UPLOAD ── */
+#tab-upload{display:none;}
+.drop-zone{
+  border:2px dashed var(--border2);
+  border-radius:var(--r-sm);
+  padding:44px 24px;
+  text-align:center;cursor:pointer;
+  transition:all .2s;
+  background:var(--surface2);
+  position:relative;
+}
+.drop-zone:hover,.drop-zone.drag-over{
+  border-color:var(--accent-border);
+  background:var(--accent-dim);
+}
+.drop-zone input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+.drop-icon{font-size:32px;margin-bottom:12px;}
+.drop-label{font-size:15px;font-weight:500;color:var(--text2);margin-bottom:5px;}
+.drop-sub{font-size:12.5px;color:var(--muted);}
+.file-badge{
+  margin-top:14px;padding:12px 16px;
+  background:var(--surface3);border-radius:10px;
+  display:none;align-items:center;gap:12px;font-size:13.5px;
+}
+.file-badge.show{display:flex;}
+
+/* ── CAMERA ── */
+#tab-camera{display:none;}
+#camera-section{text-align:center;}
+.cam-wrap{position:relative;display:inline-block;width:100%;}
+#video{
+  width:100%;border-radius:14px;
+  background:#000;max-height:300px;
+  object-fit:cover;display:block;
+}
+.cam-flip{
+  position:absolute;top:10px;right:10px;
+  background:rgba(0,0,0,0.6);
+  border:1px solid rgba(255,255,255,0.2);
+  color:#fff;width:38px;height:38px;
+  border-radius:50%;font-size:16px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  transition:background .2s;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.cam-flip:hover{background:rgba(255,255,255,0.15);}
+.cam-flip:active{background:rgba(255,255,255,0.25);}
+#canvas{display:none;}
+.capture-btn{
+  background:var(--accent2);
+  color:#0a0a0a;border:none;
+  padding:13px 28px;border-radius:var(--r-sm);
+  font-size:14.5px;font-weight:600;
+  margin-top:14px;cursor:pointer;
+  font-family:'Inter',sans-serif;
+  transition:opacity .2s,transform .1s;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  box-shadow:0 2px 12px rgba(0,0,0,0.4);
+}
+.capture-btn:hover{opacity:.9;}
+.capture-btn:active{transform:scale(.98);}
+#camera-status{margin-top:9px;color:var(--muted);font-size:13px;min-height:18px;}
+#photo-preview{display:none;margin-top:14px;}
+#captured-img{width:100%;border-radius:14px;max-height:340px;object-fit:contain;}
+.ocr-wrap{
+  margin-top:12px;padding:14px 16px;
+  background:var(--surface2);border-radius:10px;
+  display:none;
+}
+.ocr-track{height:3px;background:var(--border);border-radius:9999px;overflow:hidden;margin-top:9px;}
+.ocr-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width .3s;
+}
+.retake-btn{
+  margin-top:10px;background:transparent;
+  color:var(--muted);border:1px solid var(--border2);
+  padding:10px 20px;border-radius:var(--r-xs);
+  cursor:pointer;font-family:'Inter',sans-serif;font-size:13.5px;
+  transition:all .2s;-webkit-tap-highlight-color:transparent;
+}
+.retake-btn:hover{color:var(--text);border-color:var(--border3);}
+
+/* ── DEMO ── */
+#tab-demo{display:none;}
+.demo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
+.demo-card{
+  padding:16px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:var(--r-sm);
+  cursor:pointer;
+  transition:all .2s;
+  position:relative;
+  overflow:hidden;
+}
+.demo-card::before{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--accent-dim),transparent);
+  opacity:0;transition:opacity .2s;
+}
+.demo-card:hover::before,.demo-card.active::before{opacity:1;}
+.demo-card:hover,.demo-card.active{border-color:var(--accent-border);}
+.demo-card-name{font-size:13.5px;font-weight:600;margin-bottom:4px;position:relative;}
+.demo-card-desc{font-size:12px;color:var(--muted);line-height:1.4;position:relative;}
+
+/* ── AI PANEL ── */
+.ai-panel{margin-top:20px;}
+.ai-top{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 18px;
+  background:var(--surface2);
+  border-radius:var(--r-sm);
+  cursor:pointer;border:1px solid var(--border);
+  transition:all .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.ai-top:hover{border-color:var(--border3);background:var(--surface3);}
+.ai-top.on{border-color:var(--border3);background:var(--surface3);}
+.ai-label{font-weight:600;font-size:14.5px;margin-bottom:2px;display:flex;align-items:center;gap:8px;}
+.ai-sub{font-size:12.5px;color:var(--muted);}
+.toggle{
+  width:46px;height:25px;
+  background:var(--surface3);
+  border-radius:9999px;position:relative;
+  transition:background .3s;flex-shrink:0;
+  border:1px solid var(--border2);
+}
+.toggle::after{
+  content:'';position:absolute;
+  width:19px;height:19px;
+  background:var(--muted);border-radius:50%;
+  top:2px;left:2px;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+}
+.toggle.on{background:var(--accent-dim);border-color:var(--accent-border);}
+.toggle.on::after{left:23px;background:var(--accent2);}
+
+#ai-key-row{
+  display:none;margin-top:10px;
+  padding:16px;background:var(--surface2);
+  border-radius:var(--r-sm);border:1px solid var(--border);
+}
+#api-key{
+  width:100%;background:var(--surface3);
+  border:1px solid var(--border);border-radius:var(--r-xs);
+  padding:12px 16px;font-size:14.5px;
+  color:var(--text);font-family:'Inter',sans-serif;
+  transition:border-color .2s;
+}
+#api-key:focus{border-color:var(--accent-border);box-shadow:0 0 0 3px var(--accent-glow);outline:none;}
+#api-key::placeholder{color:var(--muted);}
+.key-remember{
+  display:flex;align-items:center;gap:8px;
+  margin-top:10px;font-size:12.5px;color:var(--muted);
+  cursor:pointer;user-select:none;
+}
+.key-remember input{accent-color:var(--accent);cursor:pointer;}
+.ai-note{margin-top:8px;font-size:11.5px;color:var(--muted);line-height:1.5;}
+
+/* ── BUTTONS ── */
+.btn-row{display:flex;align-items:center;gap:10px;margin-top:20px;flex-wrap:wrap;}
+.btn-primary{
+  background:var(--accent2);
+  color:#0a0a0a;border:none;
+  padding:14px 28px;border-radius:var(--r-sm);
+  font-size:15px;font-weight:600;
+  cursor:pointer;font-family:'Inter',sans-serif;
+  transition:opacity .2s,transform .15s;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  letter-spacing:.1px;
+}
+.btn-primary:hover{opacity:.88;transform:translateY(-1px);}
+.btn-primary:active{opacity:.75;transform:translateY(0);}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+.btn-ghost{
+  background:transparent;color:var(--muted);
+  border:1px solid var(--border2);
+  padding:14px 20px;border-radius:var(--r-sm);
+  font-size:13.5px;cursor:pointer;
+  font-family:'Inter',sans-serif;
+  transition:all .2s;-webkit-tap-highlight-color:transparent;
+}
+.btn-ghost:hover{color:var(--text);border-color:var(--border3);}
+.btn-ghost:active{opacity:.7;}
+#status-msg{font-size:13px;color:var(--muted);flex:1;min-width:0;word-break:break-word;}
+
+.shortcut-hint{
+  font-size:11.5px;color:var(--muted);margin-top:8px;
+  display:flex;align-items:center;gap:4px;
+}
+.kbd{
+  background:var(--surface3);border:1px solid var(--border2);
+  border-radius:4px;padding:1px 6px;
+  font-size:10.5px;font-family:monospace;color:var(--muted2);
+}
+
+/* ── PROGRESS ── */
+#prog-wrap{display:none;margin-top:18px;}
+.prog-track{
+  height:3px;background:var(--border);
+  border-radius:9999px;overflow:hidden;
+}
+.prog-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,#555555,#e2e2e2,#ffffff);
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+}
+#prog-label{margin-top:8px;color:var(--muted);font-size:12.5px;}
+
+/* ── RESULTS ── */
+#results{margin-top:40px;padding-bottom:100px;}
+
+.results-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:24px;flex-wrap:wrap;gap:12px;
+}
+.results-title{
+  font-family:'Instrument Serif',serif;
+  font-size:30px;font-weight:400;letter-spacing:-.5px;
+}
+.export-row{display:flex;gap:8px;}
+.btn-export{
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--muted2);padding:8px 14px;
+  border-radius:var(--r-xs);font-size:12.5px;
+  cursor:pointer;font-family:'Inter',sans-serif;
+  transition:all .2s;-webkit-tap-highlight-color:transparent;
+}
+.btn-export:hover{color:var(--text);border-color:var(--border3);}
+
+/* plain english summary */
+.plain-box{
+  padding:20px 22px;
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-radius:var(--r);
+  margin-bottom:22px;
+  position:relative;
+  overflow:hidden;
+}
+.plain-box::before{
+  content:'';
+  position:absolute;left:0;top:0;bottom:0;
+  width:3px;
+  background:linear-gradient(180deg,#ffffff,#555555);
+  border-radius:9999px;
+}
+.plain-label{
+  font-size:10.5px;font-weight:600;letter-spacing:1.8px;
+  text-transform:uppercase;color:var(--muted2);
+  margin-bottom:8px;
+}
+.plain-text{font-size:14.5px;color:var(--text2);line-height:1.65;}
+
+/* metrics */
+.metrics{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  margin-bottom:22px;
+}
+.metric{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-sm);
+  padding:18px 12px;
+  text-align:center;
+  transition:border-color .2s;
+}
+.metric:hover{border-color:var(--border2);}
+.metric-n{
+  font-family:'Instrument Serif',serif;
+  font-size:30px;letter-spacing:-1px;
+  line-height:1;margin-bottom:5px;
+}
+.metric-l{font-size:11px;color:var(--muted);font-weight:400;}
+
+/* risk banner */
+.risk-banner{
+  display:flex;gap:16px;align-items:flex-start;
+  padding:20px 22px;border-radius:var(--r);
+  margin-bottom:22px;border:1px solid;
+}
+.risk-banner.high{background:var(--danger-dim);border-color:var(--danger-border);}
+.risk-banner.medium{background:var(--warning-dim);border-color:var(--warning-border);}
+.risk-banner.low{background:var(--safe-dim);border-color:var(--safe-border);}
+.risk-icon{font-size:24px;flex-shrink:0;margin-top:2px;}
+.risk-title{font-weight:600;font-size:15px;margin-bottom:4px;}
+.risk-desc{font-size:13px;color:var(--text2);line-height:1.55;}
+
+/* sections */
+.sec-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0 10px;
+  margin-top:20px;
+  border-top:1px solid var(--border);
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+.sec-left{display:flex;align-items:center;gap:10px;}
+.sec-name{
+  font-size:10.5px;font-weight:600;letter-spacing:1.8px;
+  text-transform:uppercase;color:var(--muted);
+}
+.sec-badge{
+  font-size:11px;
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--muted);padding:2px 9px;border-radius:9999px;
+}
+.sec-chevron{color:var(--muted);font-size:11px;transition:transform .2s;}
+.sec-chevron.open{transform:rotate(180deg);}
+.sec-body{padding-top:2px;}
+.sec-body.collapsed{display:none;}
+
+/* finding cards */
+.finding{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-sm);
+  padding:18px 20px;
+  margin-bottom:8px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.finding:hover{border-color:var(--border2);box-shadow:0 4px 20px rgba(0,0,0,.3);}
+.finding-head{display:flex;align-items:flex-start;gap:13px;margin-bottom:9px;}
+.finding-ico{font-size:18px;flex-shrink:0;margin-top:1px;}
+.finding-title{font-weight:600;font-size:14px;margin-bottom:5px;line-height:1.3;}
+.tags{display:flex;gap:6px;flex-wrap:wrap;}
+.tag{
+  font-size:10.5px;padding:3px 10px;
+  border-radius:9999px;font-weight:600;letter-spacing:.2px;
+}
+.t-danger{background:var(--danger-dim);color:var(--danger);border:1px solid var(--danger-border);}
+.t-warning{background:var(--warning-dim);color:var(--warning);border:1px solid var(--warning-border);}
+.t-info{background:var(--info-dim);color:var(--info);border:1px solid rgba(148,163,184,.25);}
+.t-cat{background:var(--surface2);color:var(--muted);border:1px solid var(--border2);}
+.finding-body{font-size:13px;color:var(--text2);line-height:1.6;}
+.finding-quote{
+  margin-top:10px;padding:10px 14px;
+  background:var(--surface2);border-radius:var(--r-xs);
+  border-left:2px solid var(--border3);
+  font-size:12px;color:var(--muted);font-style:italic;line-height:1.5;
+}
+
+/* AI result */
+.ai-result{
+  margin-top:24px;
+  border:1px solid var(--border2);
+  border-radius:var(--r);
+  overflow:hidden;
+  background:var(--surface2);
+}
+.ai-result-header{
+  padding:16px 22px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+}
+.ai-result-title{
+  display:flex;align-items:center;gap:9px;
+  font-size:14.5px;font-weight:600;
+  color:var(--text);
+}
+.ai-doc-type{
+  font-size:11px;background:var(--surface3);
+  border:1px solid var(--border2);
+  color:var(--muted2);padding:3px 10px;
+  border-radius:9999px;font-weight:500;
+}
+.ai-verdict{
+  padding:18px 22px;
+  font-size:14px;color:var(--text2);
+  line-height:1.65;
+  border-bottom:1px solid var(--border);
+}
+.ai-verdict strong{
+  color:var(--muted2);display:block;
+  font-size:10.5px;letter-spacing:1.5px;
+  text-transform:uppercase;margin-bottom:7px;
+}
+.ai-findings-wrap{
+  padding:16px 20px 20px;
+  border-bottom:1px solid var(--border);
+}
+.ai-findings-label{
+  font-size:10.5px;font-weight:600;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:12px;
+}
+.ai-bottom-line{
+  padding:14px 22px;
+  font-size:13.5px;color:var(--muted2);
+  font-style:italic;line-height:1.55;
+}
+.ai-bottom-line strong{
+  font-style:normal;color:var(--muted);
+  font-size:10.5px;letter-spacing:1.5px;
+  text-transform:uppercase;display:block;margin-bottom:5px;
+}
+
+/* AI finding cards */
+.ai-findings-list{
+  display:flex;flex-direction:column;gap:8px;
+}
+.ai-finding{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-sm);
+  overflow:hidden;
+  transition:border-color .2s;
+}
+.ai-finding:hover{border-color:var(--border2);}
+.ai-finding-top{
+  padding:14px 16px;
+  display:flex;align-items:flex-start;gap:12px;
+}
+.ai-finding-sev{
+  width:28px;height:28px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;flex-shrink:0;
+  margin-top:1px;
+}
+.sev-high{background:var(--danger-dim);color:var(--danger);border:1px solid var(--danger-border);}
+.sev-medium{background:var(--warning-dim);color:var(--warning);border:1px solid var(--warning-border);}
+.sev-low{background:var(--safe-dim);color:var(--safe);border:1px solid var(--safe-border);}
+.sev-info{background:rgba(148,163,184,.1);color:var(--info);border:1px solid rgba(148,163,184,.25);}
+.ai-finding-title{font-weight:600;font-size:13.5px;margin-bottom:5px;line-height:1.3;color:var(--text);}
+.ai-finding-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.ai-finding-body{
+  padding:0 16px 14px 16px;
+  font-size:13px;color:var(--text2);
+  line-height:1.6;
+}
+.ai-what{margin-bottom:8px;}
+.ai-impact{
+  margin-bottom:8px;
+  color:var(--text);
+  font-weight:500;
+  font-size:13px;
+}
+.ai-finding-action{
+  margin-top:8px;padding:9px 13px;
+  background:var(--surface2);
+  border-radius:var(--r-xs);
+  font-size:12px;color:var(--muted2);
+  line-height:1.5;
+  display:flex;gap:8px;align-items:flex-start;
+}
+.ai-finding-action::before{content:'→';color:var(--muted);flex-shrink:0;}
+
+/* deep detail fields */
+.ai-clause{
+  margin-bottom:12px;
+  padding:11px 14px;
+  background:var(--surface3);
+  border-radius:var(--r-xs);
+  border-left:2px solid var(--border3);
+  font-size:12px;color:var(--muted);
+  font-style:italic;line-height:1.55;
+}
+.ai-clause-label{
+  display:block;font-style:normal;
+  font-size:9.5px;font-weight:600;
+  letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:6px;
+}
+.ai-section{margin-bottom:10px;}
+.ai-section-label{
+  display:block;
+  font-size:9.5px;font-weight:600;
+  letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:5px;
+}
+.ai-what{font-size:13px;color:var(--text2);line-height:1.65;}
+.ai-why{font-size:13px;color:var(--text2);line-height:1.65;}
+.ai-impact{font-size:13px;color:var(--text);font-weight:500;line-height:1.65;}
+.ai-action-list{
+  font-size:12.5px;color:var(--text2);
+  line-height:1.75;
+  white-space:pre-line;
+}
+.ai-negotiate{
+  margin-top:10px;padding:9px 13px;
+  background:var(--surface2);
+  border-radius:var(--r-xs);
+  font-size:12px;color:var(--muted2);
+  display:flex;gap:8px;align-items:flex-start;
+  line-height:1.5;font-style:italic;
+}
+.ai-negotiate span{flex-shrink:0;font-style:normal;color:var(--muted);}
+
+/* parties / key dates meta row */
+.ai-meta-row{
+  padding:12px 22px;
+  border-bottom:1px solid var(--border);
+  display:flex;gap:24px;flex-wrap:wrap;
+}
+.ai-meta-item{display:flex;flex-direction:column;gap:3px;}
+.ai-meta-label{
+  font-size:9.5px;font-weight:600;
+  letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--muted);
+}
+.ai-meta-val{font-size:13px;color:var(--text2);}
+
+@media(max-width:640px){
+  .ai-meta-row{padding:10px 16px;gap:14px;}
+  .ai-clause{padding:9px 11px;}
+  .ai-action-list{font-size:12px;}
+}
+
+/* no key state */
+.ai-no-key{
+  margin-top:24px;
+  padding:28px 24px;
+  background:var(--surface2);
+  border:1px dashed var(--border2);
+  border-radius:var(--r);
+  text-align:center;
+}
+.ai-no-key-icon{font-size:28px;margin-bottom:12px;}
+.ai-no-key-title{font-size:15px;font-weight:500;color:var(--text2);margin-bottom:6px;}
+.ai-no-key-sub{font-size:13px;color:var(--muted);line-height:1.55;}
+
+/* empty state */
+.empty-state{
+  text-align:center;padding:48px 24px;
+}
+.empty-icon{font-size:40px;margin-bottom:14px;}
+.empty-title{font-size:15px;font-weight:500;color:var(--text2);margin-bottom:6px;}
+.empty-sub{font-size:13px;color:var(--muted);}
+
+.disclaimer{
+  margin-top:36px;padding-top:20px;
+  border-top:1px solid var(--border);
+  font-size:12px;color:var(--muted);line-height:1.65;
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .page{padding:0 14px;}
+  .hero{padding:48px 0 36px;}
+  .hero-stats{gap:0;}
+  .hero-stat{padding:0 16px;}
+  .hero-stat-val{font-size:22px;}
+  .card{padding:18px 15px;}
+  .tab{padding:8px 12px;font-size:12.5px;}
+  .metrics{grid-template-columns:repeat(3,1fr);gap:8px;}
+  .metric{padding:14px 8px;}
+  .metric-n{font-size:24px;}
+  .metric-l{font-size:10px;}
+  .btn-row{gap:8px;}
+  .btn-primary{flex:1;text-align:center;}
+  #status-msg{width:100%;}
+  .export-row{display:none;}
+  .results-title{font-size:24px;}
+  .risk-banner{padding:14px 16px;}
+  .finding{padding:14px 15px;}
+  .ai-result-header{padding:14px 16px;flex-wrap:wrap;gap:8px;}
+  .ai-verdict{padding:14px 16px;}
+  .ai-findings-wrap{padding:12px 14px 16px;}
+  .ai-bottom-line{padding:12px 16px;}
+  .ai-finding-top{padding:12px 14px;gap:10px;}
+  .ai-finding-body{padding:0 14px 12px 14px;}
+  .ai-finding-action{padding:8px 10px;}
+  .url-row{flex-direction:column;}
+  .url-go{padding:13px;}
+  .shortcut-hint{display:none;}
+  .nav-right .history-btn span.label{display:none;}
+  h1{letter-spacing:-1.5px;}
+  .demo-grid{grid-template-columns:1fr;}
+}
+@media(max-width:380px){
+  .metrics{grid-template-columns:repeat(2,1fr);}
+  .hero-stats{flex-wrap:wrap;gap:12px;}
+  .hero-stat{border:none!important;}
+}
+</style>
 </head>
 <body>
 <div class="page">
 
-    <nav>
-        <div class="logo"><div class="logo-mark">FR</div>FineRead</div>
-        <span style="color:var(--muted);font-size:14px;font-weight:500;">Know before you sign</span>
-    </nav>
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">
+    <div class="logo-mark">FR</div>
+    <span class="logo-text">Fine<span>Read</span></span>
+  </a>
+  <div class="nav-right">
+    <span class="nav-pill">Know before you sign</span>
+    <button class="history-btn" onclick="toggleHistory()" id="history-btn">
+      🕐 <span class="label">Recent</span>
+    </button>
+  </div>
+  <div class="history-panel" id="history-panel">
+    <div class="history-panel-title">Recent Scans</div>
+    <div id="history-list"></div>
+    <div class="history-footer"><button onclick="clearHistory()">Clear all</button></div>
+  </div>
+</nav>
 
-    <div class="hero">
-        <div class="hero-tag">Read smarter · Sign safer</div>
-        <h1>Understand the fine print<br>before you agree.</h1>
-        <p class="hero-p">Paste any Terms &amp; Conditions or Privacy Policy for an instant plain-English breakdown.</p>
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">
+    <span class="hero-eyebrow-dot"></span>
+    AI-Powered Legal Scanner
+  </div>
+  <h1>Read the <em>fine print.</em><br>Know what you're signing.</h1>
+  <p class="hero-sub">Paste any Terms & Conditions or Privacy Policy and instantly find the clauses that could cost you.</p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-val">23</div>
+      <div class="hero-stat-label">Risk patterns</div>
     </div>
-
-    <div class="card">
-        <div class="tab-row">
-            <button class="tab on" id="tab-paste-btn" onclick="setTab('paste')">Paste Text</button>
-            <button class="tab" id="tab-demo-btn" onclick="setTab('demo')">Try Demo</button>
-        </div>
-
-        <div id="paste-panel">
-            <textarea id="tc-text" placeholder="Paste the full Terms &amp; Conditions or Privacy Policy here…"></textarea>
-        </div>
-        <div id="demo-panel" style="display:none; padding:20px; background:var(--surface2); border-radius:12px; color:var(--muted); font-size:15px;">
-            ✅ Demo text loaded. Hit <strong style="color:var(--text);">Analyze</strong> to see the breakdown.
-        </div>
-
-        <div class="ai-panel">
-            <div class="ai-top" onclick="toggleAI()">
-                <div>
-                    <div style="font-weight:600;color:var(--accent-soft);">✦ AI Deep Analysis</div>
-                    <div style="font-size:13px;color:var(--muted);margin-top:2px;">More detailed — needs an Anthropic API key</div>
-                </div>
-                <div class="toggle" id="ai-toggle"></div>
-            </div>
-            <div id="ai-key-row" style="display:none;margin-top:16px;">
-                <input type="password" id="api-key" placeholder="sk-ant-api03-…"
-                    style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;font-size:16px;color:var(--text);-webkit-appearance:none;outline:none;">
-            </div>
-        </div>
-
-        <div class="btn-row">
-            <button class="btn-main" id="analyzeBtn" onclick="analyze()">Analyze →</button>
-            <button class="btn-ghost" onclick="clearAll()">Clear</button>
-        </div>
-        <div id="status-msg"></div>
-
-        <div class="prog-wrap" id="prog-wrap" style="display:none;">
-            <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
-            <div id="prog-label">Scanning…</div>
-        </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val">5</div>
+      <div class="hero-stat-label">Input methods</div>
     </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val">0</div>
+      <div class="hero-stat-label">Data stored</div>
+    </div>
+  </div>
+</div>
 
-    <div id="results"></div>
+<!-- CARD -->
+<div class="card">
 
-</div><!-- .page -->
+  <div class="tab-row">
+    <button class="tab on" data-tab="paste" onclick="setTab('paste',this)">✏️ Paste Text</button>
+    <button class="tab" data-tab="url"    onclick="setTab('url',this)">🔗 URL</button>
+    <button class="tab" data-tab="upload" onclick="setTab('upload',this)">📄 Upload</button>
+    <button class="tab" data-tab="camera" onclick="setTab('camera',this)">📸 Camera</button>
+    <button class="tab" data-tab="demo"   onclick="setTab('demo',this)">▶ Demo</button>
+  </div>
 
+  <!-- PASTE -->
+  <div id="tab-paste">
+    <div class="paste-wrap">
+      <textarea id="tc-text" placeholder="Paste the full Terms & Conditions, Privacy Policy, or any legal document here…" oninput="updateCounter()"></textarea>
+      <span class="char-counter" id="char-counter">0 chars</span>
+    </div>
+  </div>
+
+  <!-- URL -->
+  <div id="tab-url">
+    <div class="url-row">
+      <input type="url" id="url-input" placeholder="https://company.com/privacy-policy" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="url-go" id="url-fetch-btn" onclick="fetchUrl()">Fetch →</button>
+    </div>
+    <div id="url-status"></div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div id="tab-upload">
+    <div class="drop-zone" id="upload-zone"
+         ondragover="handleDragOver(event)"
+         ondragleave="handleDragLeave(event)"
+         ondrop="handleDrop(event)">
+      <input type="file" id="file-input" accept=".txt,.pdf,image/*" onchange="handleFileSelect(event)">
+      <div class="drop-icon">📂</div>
+      <div class="drop-label">Drop a file or tap to browse</div>
+      <div class="drop-sub">TXT · PDF (text-based) · JPG · PNG · max 10 MB</div>
+    </div>
+    <div class="file-badge" id="upload-file-info">
+      <span id="file-icon">📄</span>
+      <div style="flex:1;min-width:0;">
+        <div id="file-name" style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        <div id="file-status" style="font-size:11.5px;color:var(--muted);margin-top:2px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMERA -->
+  <div id="tab-camera">
+    <div id="camera-section">
+      <div class="cam-wrap">
+        <video id="video" autoplay playsinline muted></video>
+        <button class="cam-flip" id="flip-btn" onclick="flipCamera()" title="Flip camera" style="display:none;">🔄</button>
+      </div>
+      <canvas id="canvas"></canvas><br>
+      <button class="capture-btn" onclick="capturePhoto()">📸 Capture &amp; Extract Text</button>
+      <div id="camera-status">Requesting camera…</div>
+    </div>
+    <div id="photo-preview">
+      <img id="captured-img" alt="Captured document">
+      <div id="ocr-progress" class="ocr-wrap">
+        <div id="ocr-label" style="font-size:13px;color:var(--text2);">Extracting text via OCR…</div>
+        <div class="ocr-track"><div class="ocr-fill" id="ocr-bar"></div></div>
+      </div>
+      <button class="retake-btn" onclick="retakePhoto()">↩ Retake photo</button>
+    </div>
+  </div>
+
+  <!-- DEMO -->
+  <div id="tab-demo">
+    <div class="demo-grid">
+      <div class="demo-card active" id="demo-0" onclick="selectDemo(0)">
+        <div class="demo-card-name">🔴 DemoApp Privacy Policy</div>
+        <div class="demo-card-desc">Data selling, arbitration, AI training &amp; more</div>
+      </div>
+      <div class="demo-card" id="demo-1" onclick="selectDemo(1)">
+        <div class="demo-card-name">🟡 Sample SaaS Terms</div>
+        <div class="demo-card-desc">Auto-renewal, liability caps, content license</div>
+      </div>
+      <div class="demo-card" id="demo-2" onclick="selectDemo(2)">
+        <div class="demo-card-name">🟢 Minimal T&amp;C</div>
+        <div class="demo-card-desc">Low-risk boilerplate for comparison</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI PANEL -->
+  <div class="ai-panel">
+    <div class="ai-top" id="ai-top" onclick="toggleAI()">
+      <div>
+        <div class="ai-label">✦ AI Analysis <span style="font-size:11px;background:rgba(255,255,255,0.07);color:var(--muted2);padding:2px 8px;border-radius:9999px;font-weight:500;letter-spacing:.5px;border:1px solid var(--border2);">CLAUDE</span> <span id="ai-status-badge" style="font-size:11px;color:var(--safe);font-weight:500;margin-left:4px;display:none;">● Active</span></div>
+        <div class="ai-sub" id="ai-sub-label">Add your Claude API key to unlock deep AI analysis of any document</div>
+      </div>
+      <div class="toggle" id="ai-toggle"></div>
+    </div>
+    <div id="ai-key-row">
+      <input type="password" id="api-key" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false" oninput="onKeyInput()">
+      <label class="key-remember">
+        <input type="checkbox" id="remember-key" onchange="handleRememberKey()">
+        Remember key in this browser
+      </label>
+      <div class="ai-note">Key sent only to api.anthropic.com. Never stored on any server. <span style="color:var(--text2);font-weight:500;">AI analysis runs automatically when you click Analyze.</span></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-primary" id="analyzeBtn" onclick="analyze()">Analyze document →</button>
+    <button class="btn-ghost" onclick="clearAll()">Clear</button>
+    <span id="status-msg"></span>
+  </div>
+  <div class="shortcut-hint">
+    <kbd class="kbd">Ctrl</kbd>+<kbd class="kbd">Enter</kbd>&nbsp;to analyze &nbsp;·&nbsp; <kbd class="kbd">Esc</kbd>&nbsp;to close
+  </div>
+
+  <div id="prog-wrap">
+    <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    <div id="prog-label">Scanning…</div>
+  </div>
+
+</div><!-- /card -->
+
+<div id="results"></div>
+
+</div><!-- /page -->
 <script>
-/* ── DEMO TEXT ── */
-var DEMO = "Terms of Service\n\n1. Data Collection\nWe collect location data, browsing habits, contact lists, microphone and camera access logs, and device identifiers. We may share this data with third-party advertisers, data brokers, and business partners without additional notice.\n\n2. Content Ownership\nAny content you post grants us a perpetual, irrevocable, worldwide, royalty-free license. You waive any moral rights. We may use your likeness in promotional materials.\n\n3. Account Termination\nWe may terminate your account at any time, without notice. We will retain your data indefinitely.\n\n4. Arbitration\nYou agree to binding arbitration. You waive your right to participate in any class action lawsuit.\n\n5. Billing\nYour subscription automatically renews. You must cancel at least 48 hours before renewal.\n\n6. Jurisdiction\nGoverning law is Delaware. You consent to jurisdiction of Delaware courts.\n\n7. Changes\nWe may modify these terms at any time without notice. Continued use constitutes acceptance.\n\n8. Liability\nLimitation of liability: our total liability is capped at $100.";
+// ── SECURITY ──────────────────────────────────
+const SEC={
+  MAX_TEXT:500_000,MAX_FILE:10_000_000,MAX_SCAN:60_000,RATE_MS:8_000,
+  KEY_RE:/^sk-ant-[a-zA-Z0-9\-_]{20,}$/
+};
+let lastRun=0;
+function secureText(s){if(s.length>SEC.MAX_TEXT){setStatus('⚠ Text truncated to 500 KB.');return s.slice(0,SEC.MAX_TEXT);}return s;}
+function checkRate(){const w=Math.ceil((SEC.RATE_MS-(Date.now()-lastRun))/1000);if(lastRun&&w>0)return`⏳ Wait ${w}s.`;return null;}
+function validKey(k){if(!k)return'No API key.';if(!SEC.KEY_RE.test(k))return'Invalid key — expected sk-ant-…';return null;}
+function escHtml(s){return String(s).replace(/\0/g,'').replace(/[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');}
 
-/* ── RULES — plain lowercase string search, zero regex ── */
-var RULES = [
-  { str:'perpetual',           sev:'danger',  type:'right_waived', cat:'Content Rights', title:'Permanent content license',         detail:'You give the company a permanent, royalty-free license to use anything you post — forever. Even if you delete your account they can still use your photos, videos, and posts in ads or products without asking or paying you.' },
-  { str:'irrevocable',         sev:'danger',  type:'right_waived', cat:'Content Rights', title:'Irrevocable rights granted',        detail:'Once you post content you cannot take back the rights you gave the company. They can keep using your material indefinitely, even after you leave the platform.' },
-  { str:'royalty-free',        sev:'warning', type:'right_waived', cat:'Content Rights', title:'No payment for your content',       detail:'The company can use your content commercially without ever paying you. You are licensing your creative work for free.' },
-  { str:'royalty free',        sev:'warning', type:'right_waived', cat:'Content Rights', title:'No payment for your content',       detail:'The company can use your content commercially without ever paying you. You are licensing your creative work for free.' },
-  { str:'class action',        sev:'danger',  type:'right_waived', cat:'Legal Rights',   title:'Class action waiver',               detail:'You are giving up your right to join a class-action lawsuit — often the only practical way for individuals to hold large companies accountable. You can only sue alone, which is expensive and rarely worth it.' },
-  { str:'binding arbitration', sev:'danger',  type:'right_waived', cat:'Legal Rights',   title:'Forced private arbitration',        detail:'Disputes go through private arbitration instead of a public court. Arbitrators are often hired by companies and statistically favor them. You also lose the right to a jury trial.' },
-  { str:'third-party',         sev:'danger',  type:'risk',         cat:'Data & Privacy', title:'Data shared with third parties',    detail:'Your personal data can be shared with advertisers, data brokers, and business partners — companies you never agreed to share with.' },
-  { str:'third party',         sev:'danger',  type:'risk',         cat:'Data & Privacy', title:'Data shared with third parties',    detail:'Your personal data can be shared with advertisers, data brokers, and business partners — companies you never agreed to share with.' },
-  { str:'data brokers',        sev:'danger',  type:'risk',         cat:'Data & Privacy', title:'Data sold to data brokers',         detail:'Data brokers buy and resell personal information. Once shared, your data can end up anywhere — sold to marketers, insurers, or people searching for you.' },
-  { str:'location data',       sev:'warning', type:'obligation',   cat:'Data & Privacy', title:'Location tracking',                 detail:'Your precise location is collected. This reveals where you live, work, sleep, and travel, and is often stored for years and shared with advertisers.' },
-  { str:'microphone',          sev:'warning', type:'obligation',   cat:'Data & Privacy', title:'Microphone access',                 detail:'The service can access your microphone. This is one of the most invasive permissions an app can request and is rarely necessary for the core function.' },
-  { str:'contact list',        sev:'warning', type:'obligation',   cat:'Data & Privacy', title:'Contact list access',               detail:'Your contacts — people who never agreed to this service — can be collected and stored, often used to build social graphs for advertisers.' },
-  { str:'automatically renew', sev:'warning', type:'obligation',   cat:'Financial',      title:'Auto-renewal billing',              detail:'Your subscription charges you automatically every period. Many people get billed for months without realizing it. You must actively cancel before the renewal date.' },
-  { str:'auto-renew',          sev:'warning', type:'obligation',   cat:'Financial',      title:'Auto-renewal billing',              detail:'Your subscription charges you automatically every period. You must actively cancel before the renewal date or you will be charged again.' },
-  { str:'cancel at least',     sev:'warning', type:'obligation',   cat:'Financial',      title:'Early cancellation required',       detail:'You must cancel days or hours before renewal — not on the day it charges. Missing this window by even a few hours means you pay for another full period.' },
-  { str:'without notice',      sev:'warning', type:'risk',         cat:'Account',        title:'Actions without prior warning',     detail:'The company can make significant changes — including suspending your account or changing the terms — without giving you any advance warning.' },
-  { str:'terminate your account', sev:'warning', type:'risk',      cat:'Account',        title:'Account can be deleted anytime',    detail:'They can delete your account at any time, for any reason, without telling you first. Everything stored — messages, purchases, data — can disappear overnight.' },
-  { str:'retain your data',    sev:'warning', type:'obligation',   cat:'Data & Privacy', title:'Data kept after you leave',         detail:'Deleting your account does not delete your data. The company can keep everything they collected about you, potentially forever.' },
-  { str:'indefinitely',        sev:'warning', type:'obligation',   cat:'Data & Privacy', title:'Indefinite data retention',         detail:'There is no time limit on how long they keep your personal information. Your data may be stored and used long after you stop using the service.' },
-  { str:'modify these terms',  sev:'warning', type:'risk',         cat:'Legal Rights',   title:'Terms can change anytime',          detail:'The company can rewrite the rules whenever they want. Usually you will not be directly notified, and simply using the app is treated as accepting whatever the new terms say.' },
-  { str:'continued use',       sev:'info',    type:'obligation',   cat:'Legal Rights',   title:'Using = agreeing',                  detail:'Continuing to use the service after any change automatically counts as your legal agreement to the updated terms, even if you never read them.' },
-  { str:'governing law',       sev:'info',    type:'obligation',   cat:'Legal Rights',   title:'Foreign jurisdiction',              detail:'Legal disputes must be handled under the laws of a specific state or country. This often makes it very difficult and expensive for you to take legal action.' },
-  { str:'delaware',            sev:'info',    type:'obligation',   cat:'Legal Rights',   title:'Delaware jurisdiction',             detail:'Cases must be filed in Delaware courts. Unless you live there, this effectively makes suing them cost-prohibitive for most users.' },
-  { str:'limitation of liability', sev:'warning', type:'risk',    cat:'Legal Rights',   title:'Company liability capped',          detail:'Even if the company causes you real harm, the most they will pay is usually $100 or less. This clause essentially lets them off the hook for major damages.' },
-  { str:'likeness',            sev:'danger',  type:'right_waived', cat:'Content Rights', title:'Your face used in ads',             detail:'They can use your photos or videos in advertisements and marketing without asking you again. This is common in social platforms and very difficult to undo.' },
-  { str:'waive',               sev:'warning', type:'right_waived', cat:'Legal Rights',   title:'Rights waived',                     detail:'You are explicitly giving up one or more legal rights. Read this section carefully to understand exactly what you are surrendering.' },
-  { str:'sell your data',      sev:'danger',  type:'risk',         cat:'Data & Privacy', title:'Data sold',                         detail:'The company can directly sell your personal information to other businesses. Once sold, you have no control over how it is used.' },
-  { str:'device identifier',   sev:'info',    type:'obligation',   cat:'Data & Privacy', title:'Device fingerprinting',             detail:'Unique IDs from your phone or computer are collected. These can track you across apps and websites even if you clear your cookies.' },
-  { str:'browsing habits',     sev:'warning', type:'obligation',   cat:'Data & Privacy', title:'Browsing history tracked',          detail:'What websites and content you look at is recorded. This builds a detailed profile of your interests and behaviour typically sold to advertisers.' },
-  { str:'moral rights',        sev:'danger',  type:'right_waived', cat:'Content Rights', title:'Moral rights waived',               detail:'Moral rights protect your connection to your own creative work. Waiving them means the company can alter, repurpose, or remove attribution from your content freely.' },
+// ── STATE ─────────────────────────────────────
+let videoStream=null,currentImageData=null,aiOn=false,activeTab='paste',activeDemoIdx=0,currentFacingMode='environment',hasMultipleCams=false;
+
+// ── DEMO DOCS ─────────────────────────────────
+const DEMOS=[
+`PRIVACY POLICY — DemoApp Inc.
+Last updated: January 1, 2024
+
+1. DATA COLLECTION
+We collect: your name, email, phone, date of birth, precise geolocation data, device identifiers, browsing history, purchase history, and any content you create or share. We also collect information from data brokers, social media platforms, and advertising partners.
+
+2. USE OF YOUR DATA
+- To send promotional communications (you cannot opt out of all communications)
+- To share with third-party partners for their own marketing purposes
+- To sell or transfer your data as part of a merger, acquisition, or sale of assets
+- To train artificial intelligence and machine learning models
+- To create inferences and profiles about your preferences, behavior, and characteristics
+
+3. DATA SHARING
+We share your data with advertising and analytics partners. Business partners may use your data for their own independent purposes. We share with government agencies and law enforcement upon request, without notice to you.
+
+We sell your personal information to third parties. You may opt out in writing, but doing so may degrade the service.
+
+4. DATA RETENTION
+We retain your personal information indefinitely, even after account deletion. Backups persist for up to 7 years.
+
+5. ARBITRATION
+ALL DISPUTES MUST BE RESOLVED THROUGH BINDING INDIVIDUAL ARBITRATION. YOU WAIVE YOUR RIGHT TO A JURY TRIAL AND TO PARTICIPATE IN CLASS ACTION LAWSUITS.
+
+6. CHANGES
+We reserve the right to update this policy at any time without prior notice. Your continued use constitutes acceptance of any changes.
+
+7. INTELLECTUAL PROPERTY
+By submitting content, you grant us a perpetual, irrevocable, worldwide, royalty-free license to use, reproduce, modify, publish, and display that content for any purpose, including commercial purposes, without compensation to you.
+
+8. LIABILITY
+OUR TOTAL LIABILITY SHALL NOT EXCEED $1.
+
+9. GOVERNING LAW
+This agreement is governed by the laws of Delaware. You consent to exclusive jurisdiction there, regardless of where you reside.`,
+
+`TERMS OF SERVICE — SaaSCo v3.1
+
+BILLING
+Your subscription automatically renews at the end of each billing period. We may increase pricing with 30 days notice. Failure to cancel before renewal constitutes acceptance of the new price.
+
+CONTENT LICENSE
+By uploading content to SaaSCo, you grant us a non-exclusive, worldwide, royalty-free license to host, reproduce, and distribute that content to provide the service.
+
+LIMITATION OF LIABILITY
+SaaSCo's total aggregate liability shall not exceed the amount you paid in the 12 months preceding the claim, or $100, whichever is lower.
+
+TERMINATION
+We may suspend or terminate your account at any time, for any reason, with or without notice. Upon termination, you lose access to all data within 30 days.
+
+CHANGES TO SERVICE
+We reserve the right to modify or discontinue any feature at any time without liability.
+
+ARBITRATION
+Disputes will be resolved by binding arbitration under AAA rules. Class actions are waived.
+
+GOVERNING LAW
+These terms are governed by California law.`,
+
+`TERMS & CONDITIONS — SimpleApp
+
+1. USE
+By using SimpleApp you agree to these terms. You must be 18 or older.
+
+2. YOUR DATA
+We collect only your email and usage logs to operate the service. We do not sell your data. We do not use your data for advertising.
+
+3. RETENTION
+Your data is deleted within 30 days of account cancellation on request.
+
+4. IP
+You retain full ownership of your content. We claim no rights to your work.
+
+5. LIABILITY
+Our liability is limited to the amount you paid in the past 12 months.
+
+6. CHANGES
+We will notify you by email at least 14 days before any material changes.
+
+7. CONTACT
+legal@simpleapp.com`
 ];
 
-/* ── STATE ── */
-var aiOn = false;
-var activeTab = 'paste';
+// ── RULES ENGINE ──────────────────────────────
+const RULES=[
+  {id:'data_sale',level:'danger',category:'Data Sale',icon:'💸',
+   title:'Your data is sold to third parties',
+   desc:'The document explicitly states your personal data can be sold. Strangers can pay for access to your information with little transparency about how it gets used.',
+   patterns:[/sell(s|ing)?\s+your\s+(personal\s+)?(information|data)/i,/sale\s+of\s+(personal\s+)?data/i,/monetize\s+your\s+(personal\s+)?data/i]},
 
-function setTab(tab) {
-  activeTab = tab;
-  document.getElementById('tab-paste-btn').className = 'tab' + (tab === 'paste' ? ' on' : '');
-  document.getElementById('tab-demo-btn').className  = 'tab' + (tab === 'demo'  ? ' on' : '');
-  document.getElementById('paste-panel').style.display = tab === 'paste' ? 'block' : 'none';
-  document.getElementById('demo-panel').style.display  = tab === 'demo'  ? 'block' : 'none';
-}
+  {id:'class_action',level:'danger',category:'Legal Rights',icon:'⚖️',
+   title:'Class action lawsuit waiver',
+   desc:'You give up the right to join a class action lawsuit. This is one of the most harmful clauses — it lets companies avoid mass accountability even when thousands of users are harmed.',
+   patterns:[/class\s+action/i,/waive.*right.*class/i,/class.*lawsuit/i]},
 
-function toggleAI() {
-  aiOn = !aiOn;
-  document.getElementById('ai-toggle').className = 'toggle' + (aiOn ? ' on' : '');
-  document.getElementById('ai-key-row').style.display = aiOn ? 'block' : 'none';
-}
+  {id:'arbitration',level:'danger',category:'Legal Rights',icon:'🔒',
+   title:'Mandatory binding arbitration',
+   desc:'All disputes go through private arbitration, not courts. You waive your right to a jury trial. Arbitration proceedings heavily favour companies and are not publicly visible.',
+   patterns:[/binding\s+(individual\s+)?arbitration/i,/mandatory\s+arbitration/i,/waive.*jury\s+trial/i]},
 
-function clearAll() {
-  document.getElementById('tc-text').value = '';
-  document.getElementById('results').innerHTML = '';
-  document.getElementById('status-msg').textContent = '';
-  document.getElementById('prog-wrap').style.display = 'none';
-}
+  {id:'ai_training',level:'danger',category:'AI / Data Use',icon:'🤖',
+   title:'Your content trains AI models',
+   desc:'The company can use your data or uploaded content to train AI systems. Once used for training, there is no way to remove your contribution from the model.',
+   patterns:[/train(ing)?\s+(artificial\s+intelligence|machine\s+learning|ai\s+model|ml\s+model)/i,/ai.*train/i]},
 
-function setStatus(msg) {
-  document.getElementById('status-msg').textContent = msg;
-}
+  {id:'perpetual_license',level:'danger',category:'IP Rights',icon:'📋',
+   title:'Perpetual irrevocable content license',
+   desc:"You grant a license that never expires and cannot be revoked — even if you delete your account. The company keeps the right to use your content forever.",
+   patterns:[/perpetual.*irrevocable/i,/irrevocable.*perpetual/i,/royalty.?free.*perpetual/i]},
 
-function setProgress(pct, lbl) {
-  document.getElementById('prog-fill').style.width = pct + '%';
-  if (lbl !== undefined) document.getElementById('prog-label').textContent = lbl;
-}
+  {id:'liability_trivial',level:'danger',category:'Liability',icon:'💰',
+   title:'Liability capped at $1 or trivial amount',
+   desc:"The company's maximum financial liability to you is capped absurdly low. Even if they cause serious harm, your ability to recover meaningful damages is essentially zero.",
+   patterns:[/liability.*\$1[^0-9]/i,/not exceed.*\$1[^0-9]/i,/maximum.*one dollar/i]},
 
-/* ── KEYWORD SCAN — plain indexOf, no regex ── */
-function keywordScan(text) {
-  var lower = text.toLowerCase();
-  var found = [];
-  var seen  = {};
+  {id:'indefinite_retention',level:'danger',category:'Data Retention',icon:'🗃️',
+   title:'Data retained forever after deletion',
+   desc:"Your personal data persists indefinitely even after you delete your account. Closing your account doesn't erase your data from their systems.",
+   patterns:[/retain.*indefinitely/i,/indefinite.*retention/i,/even after.*account.*delet/i,/persist.*after.*delet/i]},
 
-  for (var i = 0; i < RULES.length; i++) {
-    var r = RULES[i];
-    if (seen[r.title]) continue;
-    if (lower.indexOf(r.str) !== -1) {
-      seen[r.title] = true;
-      found.push({ cat: r.cat, sev: r.sev, type: r.type, title: r.title, detail: r.detail });
-    }
-  }
+  {id:'law_enforcement',level:'danger',category:'Privacy',icon:'🏛️',
+   title:'Data shared with law enforcement without notice',
+   desc:"The company can hand your data to government agencies or law enforcement without telling you — leaving you no opportunity to contest the disclosure.",
+   patterns:[/law enforcement.*without notice/i,/without.*notif.*government/i,/government.*without.*notice/i]},
 
-  var catMap = {};
-  for (var j = 0; j < found.length; j++) {
-    var f = found[j];
-    if (!catMap[f.cat]) catMap[f.cat] = [];
-    catMap[f.cat].push(f);
-  }
-  var sections = [];
-  var catKeys = Object.keys(catMap);
-  for (var k = 0; k < catKeys.length; k++) {
-    sections.push({ category: catKeys[k], items: catMap[catKeys[k]] });
-  }
+  {id:'third_party_sharing',level:'warning',category:'Data Sharing',icon:'🤝',
+   title:'Data shared with third-party partners',
+   desc:'Your information may go to external companies for marketing and other purposes well beyond what you signed up for.',
+   patterns:[/share.*third.party/i,/third.party.*partner/i,/advertising partner/i,/joint marketing/i]},
 
-  var dangers = 0, obligations = 0, risks = 0, waived = 0;
-  for (var d = 0; d < found.length; d++) {
-    if (found[d].sev === 'danger') dangers++;
-    if (found[d].type === 'obligation') obligations++;
-    if (found[d].type === 'risk') risks++;
-    if (found[d].type === 'right_waived') waived++;
-  }
+  {id:'data_broker',level:'warning',category:'Data Collection',icon:'🗂️',
+   title:'Data purchased from data brokers',
+   desc:'The company buys additional personal information about you from data brokers — companies that harvest data from dozens of sources you may have no knowledge of.',
+   patterns:[/data broker/i,/third.party.*data.*provider/i,/purchase.*information.*about you/i]},
 
-  var risk = dangers >= 3 ? 'high' : dangers >= 1 ? 'medium' : 'low';
-  var summary = found.length === 0
-    ? 'No flagged clauses detected by keyword scan. The document may not contain standard risky language — try AI mode for deeper analysis.'
-    : dangers >= 3
-      ? 'This agreement has ' + dangers + ' high-severity clauses that significantly limit your rights. Review carefully.'
-      : dangers >= 1
-        ? 'Some concerning clauses were found. Check the items marked danger before agreeing.'
-        : 'No critical clauses found, but some items are worth reviewing before you sign.';
+  {id:'no_optout',level:'warning',category:'Marketing',icon:'📧',
+   title:'Cannot fully opt out of marketing',
+   desc:'You cannot unsubscribe from all promotional messages. The company reserves the right to contact you for marketing regardless of your preferences.',
+   patterns:[/cannot opt out/i,/may not opt out/i,/no opt.out.*marketing/i,/you cannot unsubscribe from all/i]},
 
-  return {
-    method: 'keyword', overall_risk: risk, risk_summary: summary,
-    counts: { obligations: obligations, risks: risks, rights_waived: waived },
-    sections: sections
-  };
-}
+  {id:'policy_no_notice',level:'warning',category:'Policy Changes',icon:'📝',
+   title:'Policy can change without notice',
+   desc:'Terms can be updated at any time. Continuing to use the service auto-accepts changes you may never have read.',
+   patterns:[/without.*prior notice/i,/reserve.*right.*update.*at any time/i,/continued use.*constitutes acceptance/i]},
 
-/* ── AI SCAN ── */
-function aiScan(text, apiKey) {
-  return fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 2200,
-      system: 'You are an expert lawyer. Return ONLY valid JSON with no markdown, no backticks, no extra text.',
-      messages: [{
-        role: 'user',
-        content: 'Analyze these Terms & Conditions. Return ONLY this JSON (no backticks):\n{"overall_risk":"low|medium|high","risk_summary":"2 sentences","counts":{"obligations":0,"risks":0,"rights_waived":0},"sections":[{"category":"Data & Privacy","items":[{"title":"short title","detail":"2-4 plain English sentences","severity":"danger|warning|info|neutral","type":"obligation|risk|right_waived"}]}]}\n\nTEXT:\n' + text.substring(0, 15000)
-      }]
-    })
-  })
-  .then(function(res) { return res.json(); })
-  .then(function(data) {
-    if (data.error) throw new Error(data.error.message);
-    var raw = '';
-    for (var i = 0; i < data.content.length; i++) { raw += (data.content[i].text || ''); }
-    raw = raw.replace(/```json/g, '').replace(/```/g, '').trim();
-    var parsed = JSON.parse(raw);
-    parsed.method = 'ai';
-    return parsed;
-  });
-}
+  {id:'geolocation',level:'warning',category:'Location Data',icon:'📍',
+   title:'Precise GPS location collected',
+   desc:'Your exact physical location is tracked. This can reveal where you live, work, worship, or seek medical care.',
+   patterns:[/precise\s+geo.?location/i,/exact\s+location/i,/gps.*location/i]},
 
-/* ── MAIN ANALYZE ── */
-function analyze() {
-  var text = activeTab === 'demo' ? DEMO : (document.getElementById('tc-text').value || '').trim();
+  {id:'profiling',level:'warning',category:'Profiling',icon:'🧠',
+   title:'Behavioral profiling and inference',
+   desc:'The company builds profiles and makes inferences about your personality, habits, and preferences — far beyond what you knowingly share.',
+   patterns:[/inferences.*about.*preferences/i,/profile.*your.*behavior/i,/behavioral.*profil/i,/characteristics.*about you/i]},
 
-  if (!text || text.length < 20) {
-    setStatus('Please paste some text first.');
-    return;
-  }
+  {id:'merger_transfer',level:'warning',category:'Data Transfer',icon:'🏢',
+   title:'Data transferred if company is sold',
+   desc:'If the company merges or gets acquired, your data transfers to the new owner who may have entirely different privacy practices.',
+   patterns:[/merger.*acquisition/i,/sale of assets.*data/i,/transfer.*data.*business.*transaction/i]},
 
-  var apiKey = (document.getElementById('api-key').value || '').trim();
-  if (aiOn && !apiKey) {
-    setStatus('Enter your Anthropic API key to use AI mode.');
-    return;
-  }
+  {id:'auto_renewal',level:'warning',category:'Billing',icon:'🔄',
+   title:'Automatic subscription renewal',
+   desc:'Subscriptions renew automatically. Missing the cancellation window — sometimes just a day or two — locks you into another full billing period.',
+   patterns:[/automatically renew/i,/auto.renew/i,/automatic renewal/i,/renews at the end/i]},
 
-  var btn = document.getElementById('analyzeBtn');
-  btn.disabled = true;
-  setStatus('');
-  document.getElementById('results').innerHTML = '';
-  document.getElementById('prog-wrap').style.display = 'block';
-  setProgress(5, aiOn ? 'Sending to Claude AI…' : 'Scanning for risky clauses…');
+  {id:'termination',level:'warning',category:'Account',icon:'🚫',
+   title:'Account can be terminated without reason',
+   desc:'The company can suspend or delete your account at any time for any reason, potentially with no notice and causing you to lose all your data.',
+   patterns:[/terminate.*at any time/i,/suspend.*any reason/i,/without.*cause.*terminat/i,/for any reason.*terminat/i]},
 
-  var prog = 5;
-  var ticker = setInterval(function() {
-    prog = Math.min(prog + (aiOn ? 5 : 18), 88);
-    setProgress(prog);
-  }, aiOn ? 500 : 90);
+  {id:'jurisdiction',level:'warning',category:'Jurisdiction',icon:'🗺️',
+   title:'Disputes restricted to specific jurisdiction',
+   desc:'Legal disputes must be resolved in a specific location, which may be geographically distant and costly for you to pursue.',
+   patterns:[/governed by the laws of/i,/exclusive jurisdiction/i,/consent to.*jurisdiction/i,/regardless of where you reside/i]},
 
-  var promise = aiOn ? aiScan(text, apiKey) : Promise.resolve(keywordScan(text));
+  {id:'browsing_history',level:'warning',category:'Data Collection',icon:'🔍',
+   title:'Browsing history collected',
+   desc:'Your web browsing activity is tracked. This can reveal sensitive details about your health, finances, political views, or personal relationships.',
+   patterns:[/browsing history/i,/web browsing/i,/pages you visit/i]},
 
-  promise.then(function(result) {
-    clearInterval(ticker);
-    setProgress(100, 'Complete!');
-    setTimeout(function() {
-      document.getElementById('prog-wrap').style.display = 'none';
-      showResults(result);
-      btn.disabled = false;
-    }, 300);
-  }).catch(function(err) {
-    clearInterval(ticker);
-    document.getElementById('prog-wrap').style.display = 'none';
-    setStatus('Error: ' + (err.message || 'Something went wrong.'));
-    btn.disabled = false;
-  });
-}
+  {id:'content_license',level:'warning',category:'IP Rights',icon:'©️',
+   title:'Broad license over your content',
+   desc:'You grant the company significant rights to reproduce or distribute what you upload, often including commercial use without compensation.',
+   patterns:[/royalty.free.*license.*content/i,/license.*reproduce.*modify/i,/worldwide.*license.*publish/i]},
 
-/* ── RENDER RESULTS ── */
-function esc(s) {
-  if (!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+  {id:'device_ids',level:'info',category:'Device Data',icon:'📱',
+   title:'Device identifiers collected',
+   desc:'Your device ID or advertising ID is recorded, enabling cross-app and cross-service tracking.',
+   patterns:[/device identifier/i,/advertising identifier/i,/IDFA/i,/GAID/i]},
 
-function showResults(data) {
-  var riskCfg = {
-    high:   { icon:'⚠️', bg:'rgba(224,108,117,0.12)', border:'rgba(224,108,117,0.45)', color:'#e06c75', label:'High Risk' },
-    medium: { icon:'◈',  bg:'rgba(229,181,103,0.12)', border:'rgba(229,181,103,0.45)', color:'#e5b567', label:'Medium Risk' },
-    low:    { icon:'✅', bg:'rgba(140,194,160,0.12)', border:'rgba(140,194,160,0.45)', color:'#8cc2a0', label:'Low Risk' }
-  };
-  var rc = riskCfg[data.overall_risk] || riskCfg.medium;
+  {id:'cookies',level:'info',category:'Tracking',icon:'🍪',
+   title:'Cookies and tracking technologies',
+   desc:'Cookies, pixels, or beacons track your activity across sessions and sometimes across third-party websites.',
+   patterns:[/cookies?.*tracking/i,/tracking.*technologies/i,/web beacon/i,/pixel.*track/i]},
 
-  var typeLabel = { obligation:'Obligation', risk:'Risk', right_waived:'Right Waived' };
-  var typeClass  = { obligation:'tag-info', risk:'tag-danger', right_waived:'tag-warning' };
-  var sevClass   = { danger:'tag-danger', warning:'tag-warning', info:'tag-info', neutral:'tag-neutral' };
+  {id:'analytics',level:'info',category:'Analytics',icon:'📊',
+   title:'Third-party analytics',
+   desc:'External analytics services receive usage data — page views, clicks, session duration — which may be combined with data from other sources.',
+   patterns:[/analytics.*partner/i,/third.party.*analytics/i,/google analytics/i,/analytics provider/i]}
+];
 
-  var c = data.counts || { obligations: 0, risks: 0, rights_waived: 0 };
-
-  var html = '';
-
-  /* metric grid */
-  html += '<div class="summary-grid">'
-        + '<div class="metric-box"><div class="metric-n">' + (c.obligations||0) + '</div><div class="metric-l">Obligations</div></div>'
-        + '<div class="metric-box"><div class="metric-n">' + (c.risks||0) + '</div><div class="metric-l">Risks</div></div>'
-        + '<div class="metric-box"><div class="metric-n">' + (c.rights_waived||0) + '</div><div class="metric-l">Rights Waived</div></div>'
-        + '<div class="metric-box" style="background:' + rc.bg + ';border:1px solid ' + rc.border + ';">'
-        + '<div class="metric-n" style="color:' + rc.color + ';font-size:20px;">' + rc.icon + ' ' + rc.label + '</div>'
-        + '<div class="metric-l" style="color:' + rc.color + ';">' + (data.method === 'ai' ? 'AI analysis' : 'Keyword scan') + '</div>'
-        + '</div></div>';
-
-  /* risk banner */
-  html += '<div class="risk-banner" style="background:' + rc.bg + ';border:1px solid ' + rc.border + ';">'
-        + '<div style="font-size:26px;line-height:1;flex-shrink:0;">' + rc.icon + '</div>'
-        + '<div><div style="color:' + rc.color + ';font-size:17px;font-weight:600;margin-bottom:6px;">' + rc.label + '</div>'
-        + '<div style="color:' + rc.color + ';opacity:0.9;font-size:14.5px;">' + esc(data.risk_summary) + '</div></div></div>';
-
-  /* sections */
-  var sections = data.sections || [];
-  if (sections.length === 0) {
-    html += '<div style="padding:24px;background:var(--surface2);border-radius:14px;color:var(--muted);text-align:center;">'
-          + 'No flagged clauses detected. Try the <strong>Demo</strong> tab to test the analyzer, or enable AI mode for deeper analysis.'
-          + '</div>';
-  } else {
-    for (var s = 0; s < sections.length; s++) {
-      var sec = sections[s];
-      if (!sec.items || sec.items.length === 0) continue;
-      html += '<div class="section-label">' + esc(sec.category) + '</div>';
-      for (var i = 0; i < sec.items.length; i++) {
-        var item = sec.items[i];
-        var tc = typeClass[item.type]     || 'tag-neutral';
-        var sc = sevClass[item.severity]  || 'tag-neutral';
-        var tl = typeLabel[item.type]     || (item.type || '');
-        html += '<div class="item-card">'
-              + '<div class="item-head">'
-              + '<div class="item-title">' + esc(item.title) + '</div>'
-              + '<div class="tags">'
-              + '<span class="tag ' + tc + '">' + esc(tl) + '</span>'
-              + '<span class="tag ' + sc + '">' + esc(item.severity) + '</span>'
-              + '</div></div>'
-              + '<div class="item-detail">' + esc(item.detail) + '</div>'
-              + '</div>';
+function keywordScan(text){
+  const found=[];
+  for(const r of RULES){
+    for(const p of r.patterns){
+      const idx=text.search(p);
+      if(idx!==-1){
+        const s=Math.max(0,idx-40),e=Math.min(text.length,idx+160);
+        const snippet='…'+text.slice(s,e).replace(/\s+/g,' ').trim()+'…';
+        found.push({...r,snippet});
+        break;
       }
     }
   }
-
-  html += '<div class="disclaimer">For informational purposes only — not legal advice. Consult a qualified lawyer for legal decisions.</div>';
-
-  var el = document.getElementById('results');
-  el.innerHTML = html;
-
-  /* scroll after paint */
-  setTimeout(function() {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 50);
+  return found;
 }
+
+function autoSummary(findings,wordCount){
+  const d=findings.filter(f=>f.level==='danger').length;
+  const w=findings.filter(f=>f.level==='warning').length;
+  const mins=Math.ceil(wordCount/200);
+  if(d===0&&w===0)return`This ${mins}-minute read appears relatively standard — no major red flags were detected. Enable AI Analysis for a deeper review of subtler language.`;
+  const top=findings.filter(f=>f.level==='danger').slice(0,2).map(f=>f.title.toLowerCase());
+  let out=`This ${mins}-minute read (${(wordCount/1000).toFixed(1)}k words) contains `;
+  if(d>0)out+=`${d} serious clause${d>1?'s':''} including ${top.join(' and ')}`;
+  if(d>0&&w>0)out+=`, and `;
+  if(w>0)out+=`${w} clause${w>1?'s':''} worth knowing about`;
+  return out+'. Review the highlighted sections carefully before agreeing.';
+}
+
+// ── AI SCAN ───────────────────────────────────
+async function aiScan(text,key){
+  const body=text.slice(0,20000);
+  const prompt=`You are a senior attorney with 20 years of experience reviewing contracts, privacy policies, employment agreements, leases, NDAs, and legal documents on behalf of consumers. Your job: give the most thorough, honest, useful analysis possible so the person fully understands what they are agreeing to.
+
+Analyze the document below. Return ONLY valid JSON — no markdown fences, no text outside the JSON.
+
+Use this exact structure:
+
+{
+  "docType": "Precise document type (e.g. 'Privacy Policy', 'Employment Contract', 'Residential Lease', 'NDA', 'Software License', 'Loan Agreement', 'Terms of Service', etc.)",
+  "parties": "Who the parties are — e.g. 'You (user) and Acme Corp (company)'",
+  "overallRisk": "high | medium | low",
+  "overallScore": integer 1-10 where 10 is most dangerous to the signer,
+  "verdict": "5-7 sentences. Plain English: what is this document, what is the person agreeing to, and what are the most consequential things they need to know. Write as if a trusted lawyer friend just read it and is telling you what they found over coffee. Be direct and warm.",
+  "bottomLine": "One blunt sentence — the single most critical thing to know before signing.",
+  "keyDates": "Any important deadlines, renewal dates, notice periods, or time-sensitive obligations. Empty string if none.",
+  "findings": [
+    {
+      "title": "Specific descriptive title, 6-10 words",
+      "severity": "high | medium | low | info",
+      "category": "Precise category e.g. Data Sale, Arbitration, IP Rights, Termination, Non-Compete, Compensation, Liability Cap, Auto-Renewal, Jurisdiction, Confidentiality, etc.",
+      "clause": "Quote the exact or near-exact language from the document this finding is based on. Max 120 words. This is critical — people need to see the actual text.",
+      "what": "4-5 sentences explaining what this clause means in plain English. No jargon. Explain as if the reader has never seen a legal document.",
+      "whyItMatters": "3-4 sentences on real-world significance. Give a concrete realistic scenario of how this could play out — what could actually happen to this person because of this clause. Be specific.",
+      "impact": "3-4 sentences on direct personal impact. How does this change what they can do, what they owe, what rights they gain or lose? Make it personal.",
+      "action": "Give 3 specific actionable steps. Number them. Be concrete — e.g. '1. Ask them to strike clause 7.2 entirely.  2. If they refuse, add a written addendum limiting the scope to X.  3. Set a calendar reminder for the 30-day cancellation window on [date].' Not vague advice.",
+      "negotiate": "Is this negotiable? One honest sentence based on realistic legal practice for this document type."
+    }
+  ]
+}
+
+CRITICAL RULES:
+- findings must have 8-15 items. Cover everything significant.
+- ALWAYS populate the clause field with actual text from the document. This is the most important field.
+- whyItMatters must include a concrete realistic scenario — not abstract risk.
+- action must have numbered specific steps, not one generic sentence.
+- Cover document-type specifics: employment = non-compete/IP/at-will/benefits; lease = deposit/maintenance/subletting/pets; NDA = scope/duration/carve-outs; loan = APR/prepayment/default; privacy = data sale/retention/sharing.
+- Include clauses that PROTECT or BENEFIT the signer (severity: info) — people need to know their rights too.
+- Be ruthlessly honest. Call out serious red flags directly.
+- verdict reads like a trusted lawyer friend giving you the real talk, not a formal legal document.
+
+Document:
+---
+${body}
+---`;
+
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-opus-4-5',max_tokens:4000,messages:[{role:'user',content:prompt}]})
+  });
+  if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e?.error?.message||`API error ${resp.status}`);}
+  const data=await resp.json();
+  const raw=data.content?.[0]?.text||'';
+  const clean=raw.replace(/^```(?:json)?\s*/i,'').replace(/\s*```\s*$/,'').trim();
+  try{
+    return JSON.parse(clean);
+  }catch{
+    const match=clean.match(/\{[\s\S]*/);
+    if(match){try{return JSON.parse(match[0]);}catch{}}
+    return{docType:'Document',overallRisk:'medium',overallScore:5,verdict:raw.slice(0,600),bottomLine:'See analysis below.',findings:[],parties:'',keyDates:''};
+  }
+}
+
+// ── TABS ──────────────────────────────────────
+function setTab(tab,el){
+  activeTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  ['paste','url','upload','camera','demo'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
+  });
+  if(tab==='camera')startCamera(); else stopCamera();
+}
+
+// ── CAMERA ────────────────────────────────────
+async function detectMultipleCams(){
+  try{const d=await navigator.mediaDevices.enumerateDevices();hasMultipleCams=d.filter(x=>x.kind==='videoinput').length>1;}catch{hasMultipleCams=false;}
+}
+
+async function startCamera(){
+  const video=document.getElementById('video');
+  const status=document.getElementById('camera-status');
+  const flipBtn=document.getElementById('flip-btn');
+  document.getElementById('camera-section').style.display='block';
+  document.getElementById('photo-preview').style.display='none';
+  status.textContent='Requesting camera access…';
+  stopCamera();
+  const tries=[
+    {video:{facingMode:{ideal:currentFacingMode},width:{ideal:1920},height:{ideal:1080}}},
+    {video:{facingMode:currentFacingMode}},
+    {video:true}
+  ];
+  for(const c of tries){
+    try{
+      videoStream=await navigator.mediaDevices.getUserMedia(c);
+      video.srcObject=videoStream;
+      await video.play().catch(()=>{});
+      status.textContent=currentFacingMode==='environment'?'📷 Rear camera ready — point at document':'🤳 Front camera ready';
+      await detectMultipleCams();
+      flipBtn.style.display=hasMultipleCams?'flex':'none';
+      return;
+    }catch{/*try next*/}
+  }
+  flipBtn.style.display='none';
+  status.textContent='⚠ Camera unavailable. Use the Upload tab.';
+}
+
+function stopCamera(){if(videoStream){videoStream.getTracks().forEach(t=>t.stop());videoStream=null;}}
+async function flipCamera(){currentFacingMode=currentFacingMode==='environment'?'user':'environment';await startCamera();}
+
+function capturePhoto(){
+  const video=document.getElementById('video');
+  const canvas=document.getElementById('canvas');
+  const status=document.getElementById('camera-status');
+  if(!video.videoWidth||!video.videoHeight){status.textContent='⚠ Camera not ready yet — wait a moment.';return;}
+  canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+  const ctx=canvas.getContext('2d');
+  ctx.filter='grayscale(100%) contrast(1.65) brightness(1.1)';
+  ctx.drawImage(video,0,0);ctx.filter='none';
+  currentImageData=canvas.toDataURL('image/jpeg',0.92);
+  document.getElementById('captured-img').src=currentImageData;
+  document.getElementById('camera-section').style.display='none';
+  document.getElementById('photo-preview').style.display='block';
+  stopCamera();runOCR(currentImageData);
+}
+
+function retakePhoto(){
+  document.getElementById('photo-preview').style.display='none';
+  document.getElementById('ocr-progress').style.display='none';
+  document.getElementById('ocr-bar').style.width='0%';
+  document.getElementById('ocr-label').textContent='Extracting text via OCR…';
+  currentImageData=null;startCamera();
+}
+
+async function runOCR(src){
+  const bar=document.getElementById('ocr-bar');
+  const label=document.getElementById('ocr-label');
+  document.getElementById('ocr-progress').style.display='block';
+  bar.style.width='0%';label.textContent='Initializing OCR engine…';
+  try{
+    const worker=await Tesseract.createWorker('eng',1,{
+      logger:m=>{if(m.status==='recognizing text'){const p=Math.round(m.progress*100);bar.style.width=p+'%';label.textContent=`Extracting text… ${p}%`;}}
+    });
+    const result=await worker.recognize(src);
+    await worker.terminate();
+    const text=result.data.text.trim();
+    bar.style.width='100%';
+    if(text.length<30){label.textContent='⚠ Not enough text — try a clearer photo.';return;}
+    document.getElementById('tc-text').value=text;updateCounter();
+    label.textContent=`✅ Extracted ${text.length.toLocaleString()} characters`;
+    const pb=document.querySelector('.tab[data-tab="paste"]');if(pb)setTab('paste',pb);
+  }catch{document.getElementById('ocr-label').textContent='❌ OCR failed — try Upload tab.';}
+}
+
+// ── FILE UPLOAD ───────────────────────────────
+function handleDragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('drag-over');}
+function handleDragLeave(){document.getElementById('upload-zone').classList.remove('drag-over');}
+function handleDrop(e){e.preventDefault();handleDragLeave();const f=e.dataTransfer.files[0];if(f)processFile(f);}
+function handleFileSelect(e){const f=e.target.files[0];if(f)processFile(f);}
+
+async function processFile(file){
+  const info=document.getElementById('upload-file-info');
+  const nameEl=document.getElementById('file-name');
+  const statusEl=document.getElementById('file-status');
+  const iconEl=document.getElementById('file-icon');
+  if(file.size>SEC.MAX_FILE){
+    info.classList.add('show');iconEl.textContent='⚠️';nameEl.textContent=file.name;
+    statusEl.textContent=`❌ Too large (${(file.size/1e6).toFixed(1)} MB). Max 10 MB.`;return;
+  }
+  nameEl.textContent=file.name;info.classList.add('show');
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='txt'){
+    iconEl.textContent='📄';statusEl.textContent='Reading…';
+    const text=await file.text();
+    document.getElementById('tc-text').value=secureText(text);updateCounter();
+    statusEl.textContent=`✅ Loaded ${text.length.toLocaleString()} chars`;
+    const pb=document.querySelector('.tab[data-tab="paste"]');if(pb)setTab('paste',pb);
+  }else if(['jpg','jpeg','png','webp'].includes(ext)){
+    iconEl.textContent='🖼️';statusEl.textContent='Running OCR…';
+    const reader=new FileReader();
+    reader.onload=ev=>runOCRFromFile(ev.target.result,statusEl);
+    reader.readAsDataURL(file);
+  }else if(ext==='pdf'){
+    iconEl.textContent='📑';statusEl.textContent='Extracting PDF text…';
+    try{
+      const buf=await file.arrayBuffer();
+      const text=await extractPDF(buf);
+      if(text.length<30){statusEl.textContent='⚠ Scanned PDF — try Camera tab.';return;}
+      document.getElementById('tc-text').value=secureText(text);updateCounter();
+      statusEl.textContent=`✅ Extracted ${text.length.toLocaleString()} chars`;
+      const pb=document.querySelector('.tab[data-tab="paste"]');if(pb)setTab('paste',pb);
+    }catch{statusEl.textContent='❌ PDF parse failed. Try copy-pasting text.';}
+  }else{statusEl.textContent='❌ Unsupported. Use TXT, PDF, JPG, or PNG.';}
+}
+
+async function extractPDF(buf){
+  if(!window._pdfReady){
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    await new Promise(r=>setTimeout(r,120));
+    if(typeof pdfjsLib==='undefined')throw new Error('pdf.js failed to load');
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    window._pdfReady=true;
+  }
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let out='';
+  for(let i=1;i<=pdf.numPages;i++){
+    const page=await pdf.getPage(i);
+    const c=await page.getTextContent();
+    out+=c.items.map(x=>x.str).join(' ')+'\n';
+  }
+  return out.trim();
+}
+
+function loadScript(src){
+  return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+}
+
+async function runOCRFromFile(src,statusEl){
+  try{
+    const worker=await Tesseract.createWorker('eng',1,{
+      logger:m=>{if(m.status==='recognizing text')statusEl.textContent=`OCR: ${Math.round(m.progress*100)}%`;}
+    });
+    const result=await worker.recognize(src);await worker.terminate();
+    const text=result.data.text.trim();
+    if(text.length<30){statusEl.textContent='⚠ Not enough text detected.';return;}
+    document.getElementById('tc-text').value=secureText(text);updateCounter();
+    statusEl.textContent=`✅ OCR complete — ${text.length.toLocaleString()} chars`;
+    const pb=document.querySelector('.tab[data-tab="paste"]');if(pb)setTab('paste',pb);
+  }catch{statusEl.textContent='❌ OCR failed.';}
+}
+
+// ── URL FETCH ─────────────────────────────────
+async function fetchUrl(){
+  const input=document.getElementById('url-input').value.trim();
+  const statusEl=document.getElementById('url-status');
+  const btn=document.getElementById('url-fetch-btn');
+  if(!input){statusEl.textContent='⚠ Please enter a URL.';return;}
+  let url;
+  try{url=new URL(input);}catch{statusEl.textContent='⚠ Invalid URL — include https://';return;}
+  if(!['http:','https:'].includes(url.protocol)){statusEl.textContent='⚠ Only http/https URLs.';return;}
+  btn.disabled=true;statusEl.textContent='Fetching page…';
+  try{
+    const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(input)}`;
+    const resp=await fetch(proxy,{signal:AbortSignal.timeout(15000)});
+    if(!resp.ok)throw new Error('Proxy request failed');
+    const json=await resp.json();
+    const html=json.contents||'';
+    if(!html)throw new Error('Empty response');
+    const tmp=document.createElement('div');
+    tmp.innerHTML=html.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/<style[\s\S]*?<\/style>/gi,'').replace(/<[^>]+>/g,' ');
+    const text=(tmp.textContent||tmp.innerText||'').replace(/\s{3,}/g,'\n\n').trim();
+    if(text.length<100)throw new Error('Could not extract readable text. Try copy-pasting instead.');
+    document.getElementById('tc-text').value=secureText(text);updateCounter();
+    statusEl.textContent=`✅ ${text.length.toLocaleString()} chars — click Analyze`;
+    const pb=document.querySelector('.tab[data-tab="paste"]');if(pb)setTab('paste',pb);
+  }catch(e){statusEl.textContent=`❌ ${e.message||'Fetch failed. Try copy-pasting.'}`;}
+  btn.disabled=false;
+}
+
+// ── DEMO ──────────────────────────────────────
+function selectDemo(idx){
+  activeDemoIdx=idx;
+  document.querySelectorAll('.demo-card').forEach((c,i)=>c.classList.toggle('active',i===idx));
+}
+
+// ── AI TOGGLE ─────────────────────────────────
+function toggleAI(){
+  aiOn=!aiOn;
+  document.getElementById('ai-toggle').classList.toggle('on',aiOn);
+  document.getElementById('ai-top').classList.toggle('on',aiOn);
+  document.getElementById('ai-key-row').style.display=aiOn?'block':'none';
+  if(aiOn) document.getElementById('api-key').focus();
+}
+
+function onKeyInput(){
+  const key=document.getElementById('api-key').value.trim();
+  const badge=document.getElementById('ai-status-badge');
+  const sub=document.getElementById('ai-sub-label');
+  if(key.length>10){
+    badge.style.display='inline';
+    sub.textContent='AI analysis will run automatically on every document';
+  } else {
+    badge.style.display='none';
+    sub.textContent='Add your Claude API key to unlock deep AI analysis of any document';
+  }
+  if(document.getElementById('remember-key').checked&&key){
+    try{localStorage.setItem('fr_key',key);}catch{}
+  }
+}
+
+function handleRememberKey(){
+  const checked=document.getElementById('remember-key').checked;
+  const key=document.getElementById('api-key').value.trim();
+  if(checked&&key){try{localStorage.setItem('fr_key',key);}catch{}}
+  else{try{localStorage.removeItem('fr_key');}catch{}}
+}
+
+function loadSavedKey(){
+  try{
+    const k=localStorage.getItem('fr_key');
+    if(k){
+      document.getElementById('api-key').value=k;
+      document.getElementById('remember-key').checked=true;
+      // Auto-open the AI panel so user sees key is loaded
+      aiOn=true;
+      document.getElementById('ai-toggle').classList.add('on');
+      document.getElementById('ai-top').classList.add('on');
+      document.getElementById('ai-key-row').style.display='block';
+      onKeyInput();
+    }
+  }catch{}
+}
+
+// ── CHAR COUNTER ──────────────────────────────
+function updateCounter(){
+  const len=document.getElementById('tc-text').value.length;
+  const el=document.getElementById('char-counter');
+  el.textContent=len>999?(len/1000).toFixed(1)+'k chars':len+' chars';
+  el.classList.toggle('warn',len>SEC.MAX_TEXT*0.8);
+}
+
+// ── HISTORY ───────────────────────────────────
+function loadHistory(){try{return JSON.parse(localStorage.getItem('fr_history')||'[]');}catch{return[];}}
+function saveHistory(items){try{localStorage.setItem('fr_history',JSON.stringify(items.slice(0,5)));}catch{}}
+function addToHistory(entry){const h=loadHistory();h.unshift(entry);saveHistory(h);}
+
+function toggleHistory(){
+  const panel=document.getElementById('history-panel');
+  const open=panel.classList.toggle('open');
+  if(open)renderHistory();
+}
+function renderHistory(){
+  const list=document.getElementById('history-list');
+  const items=loadHistory();
+  if(!items.length){list.innerHTML='<div class="history-empty">No recent scans</div>';return;}
+  const riskColor={high:'var(--danger)',medium:'var(--warning)',low:'var(--safe)'};
+  list.innerHTML=items.map((item,i)=>`
+    <div class="history-item" onclick="loadFromHistory(${i})">
+      <div class="history-item-title">${escHtml(item.title)}</div>
+      <div class="history-item-meta">
+        <span style="color:${riskColor[item.risk]||'var(--muted)'}">${item.risk} risk</span>
+        <span>${item.findings} findings</span>
+        <span>${item.date}</span>
+      </div>
+    </div>`).join('');
+}
+function loadFromHistory(idx){
+  const item=loadHistory()[idx];if(!item)return;
+  document.getElementById('tc-text').value=item.text;updateCounter();
+  document.getElementById('history-panel').classList.remove('open');
+  const pb=document.querySelector('.tab[data-tab="paste"]');if(pb)setTab('paste',pb);
+  setStatus('Loaded from history — click Analyze to re-run.');
+}
+function clearHistory(){try{localStorage.removeItem('fr_history');}catch{}renderHistory();}
+
+document.addEventListener('click',e=>{
+  const panel=document.getElementById('history-panel');
+  const btn=document.getElementById('history-btn');
+  if(panel.classList.contains('open')&&!panel.contains(e.target)&&!btn.contains(e.target))
+    panel.classList.remove('open');
+});
+
+// ── UTILS ─────────────────────────────────────
+function clearAll(){
+  document.getElementById('tc-text').value='';
+  document.getElementById('results').innerHTML='';
+  updateCounter();setStatus('');
+  document.getElementById('prog-wrap').style.display='none';
+  const info=document.getElementById('upload-file-info');
+  info.classList.remove('show');
+  document.getElementById('file-input').value='';
+  document.getElementById('file-name').textContent='';
+  document.getElementById('file-status').textContent='';
+  document.getElementById('url-input').value='';
+  document.getElementById('url-status').textContent='';
+  currentImageData=null;currentFacingMode='environment';
+  document.getElementById('flip-btn').style.display='none';
+  document.getElementById('camera-section').style.display='block';
+  document.getElementById('photo-preview').style.display='none';
+  document.getElementById('ocr-progress').style.display='none';
+  document.getElementById('ocr-bar').style.width='0%';
+  document.getElementById('history-panel').classList.remove('open');
+}
+
+function setStatus(msg){document.getElementById('status-msg').textContent=msg;}
+
+// animated progress
+const STEPS=[[12,'Reading document…'],[26,'Checking legal clauses…'],[44,'Scanning for red flags…'],[60,'Cross-referencing rules…'],[76,'Compiling results…']];
+let progTimer=null;
+function startProgress(){
+  document.getElementById('prog-wrap').style.display='block';
+  let i=0;
+  (function tick(){
+    if(i>=STEPS.length)return;
+    const[pct,label]=STEPS[i++];
+    document.getElementById('prog-fill').style.width=pct+'%';
+    document.getElementById('prog-label').textContent=label;
+    progTimer=setTimeout(tick,360+Math.random()*180);
+  })();
+}
+function endProgress(){
+  clearTimeout(progTimer);
+  document.getElementById('prog-fill').style.width='100%';
+  document.getElementById('prog-label').textContent='Done!';
+  setTimeout(()=>{document.getElementById('prog-wrap').style.display='none';},700);
+}
+
+// ── ANALYZE ───────────────────────────────────
+async function analyze(){
+  const rl=checkRate();if(rl){setStatus(rl);return;}
+  let text='';
+  if(activeTab==='demo'){text=DEMOS[activeDemoIdx];}
+  else{
+    text=document.getElementById('tc-text').value.trim();
+    if(activeTab==='camera'&&!text){
+      const lbl=document.getElementById('ocr-label').textContent;
+      if(lbl.includes('%')||lbl.includes('Initializing')){setStatus('⏳ OCR still running…');return;}
+    }
+  }
+  if(!text||text.length<50){setStatus('⚠ Need at least 50 characters to analyze.');return;}
+  text=secureText(text);
+
+  const btn=document.getElementById('analyzeBtn');
+  btn.disabled=true;setStatus('');
+  document.getElementById('results').innerHTML='';
+  startProgress();
+  await new Promise(r=>setTimeout(r,30));
+
+  // Keyword scan always runs
+  const scanText=text.length>SEC.MAX_SCAN?text.slice(0,SEC.MAX_SCAN):text;
+  const findings=keywordScan(scanText);
+  const wordCount=text.trim().split(/\s+/).filter(Boolean).length;
+  const readMins=Math.ceil(wordCount/200);
+  const dangerCount=findings.filter(f=>f.level==='danger').length;
+  const warningCount=findings.filter(f=>f.level==='warning').length;
+  const infoCount=findings.filter(f=>f.level==='info').length;
+  let overallRisk='low';
+  if(dangerCount>=3||(dangerCount>=1&&warningCount>=3))overallRisk='high';
+  else if(dangerCount>=1||warningCount>=2)overallRisk='medium';
+
+  // AI scan — runs automatically if a key is present
+  let aiData=null;
+  const key=document.getElementById('api-key').value.trim();
+  if(key){
+    if(document.getElementById('remember-key').checked){
+      try{localStorage.setItem('fr_key',key);}catch{}
+    }
+    const keyErr=validKey(key);
+    if(keyErr){
+      setStatus('⚠ '+keyErr);btn.disabled=false;endProgress();return;
+    }
+    document.getElementById('prog-fill').style.width='72%';
+    document.getElementById('prog-label').textContent='AI reading document… (10–20 sec)';
+    try{
+      aiData=await aiScan(text,key);
+      // Use AI risk level if available and more severe
+      if(aiData?.overallRisk){
+        const aiRisk=aiData.overallRisk.toLowerCase();
+        const riskOrder={low:0,medium:1,high:2};
+        if((riskOrder[aiRisk]||0)>(riskOrder[overallRisk]||0)) overallRisk=aiRisk;
+      }
+    }catch(e){
+      aiData={error:escHtml(e.message)};
+    }
+  }
+
+  lastRun=Date.now();endProgress();
+
+  const titleGuess=aiData?.docType
+    ||text.match(/(?:privacy policy|terms of service|terms & conditions|terms and conditions|employment agreement|rental agreement|non.disclosure|nda|license agreement)[^\n]*/i)?.[0]?.slice(0,50)
+    ||'Scanned document';
+  addToHistory({title:titleGuess,risk:overallRisk,findings:findings.length+(aiData?.findings?.length||0),date:new Date().toLocaleDateString(),text:text.slice(0,8000)});
+
+  renderResults({findings,overallRisk,wordCount,readMins,aiData,dangerCount,warningCount,infoCount,hasKey:!!key});
+  btn.disabled=false;
+  setTimeout(()=>document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'}),150);
+}
+
+// ── RENDER RESULTS ────────────────────────────
+function renderResults({findings,overallRisk,wordCount,readMins,aiData,dangerCount,warningCount,infoCount,hasKey}){
+  const rc={
+    high:{emoji:'🔴',label:'High Risk',color:'var(--danger)',bg:'high',desc:'Serious clauses found that could significantly affect your rights, finances, or obligations.'},
+    medium:{emoji:'🟡',label:'Medium Risk',color:'var(--warning)',bg:'medium',desc:'Some concerning clauses found. Review the highlighted sections before agreeing.'},
+    low:{emoji:'🟢',label:'Relatively Standard',color:'var(--safe)',bg:'low',desc:'No major red flags detected. Appears reasonably standard for this document type.'}
+  }[overallRisk];
+
+  const dI=findings.filter(f=>f.level==='danger');
+  const wI=findings.filter(f=>f.level==='warning');
+  const iI=findings.filter(f=>f.level==='info');
+
+  function kwCard(f){
+    const tc={danger:'t-danger',warning:'t-warning',info:'t-info'}[f.level];
+    const tl={danger:'🔴 High Risk',warning:'🟡 Caution',info:'ℹ Info'}[f.level];
+    return`<div class="finding">
+      <div class="finding-head">
+        <div class="finding-ico">${f.icon}</div>
+        <div style="flex:1;">
+          <div class="finding-title">${escHtml(f.title)}</div>
+          <div class="tags"><span class="tag ${tc}">${tl}</span><span class="tag t-cat">${escHtml(f.category)}</span></div>
+        </div>
+      </div>
+      <div class="finding-body">${escHtml(f.desc)}</div>
+      ${f.snippet?`<div class="finding-quote">${escHtml(f.snippet)}</div>`:''}
+    </div>`;
+  }
+
+  function section(name,items,open){
+    if(!items.length)return'';
+    const id='s'+name.replace(/\W/g,'');
+    return`<div class="sec-header" onclick="toggleSection('${id}')">
+      <div class="sec-left"><span class="sec-name">${name}</span><span class="sec-badge">${items.length}</span></div>
+      <span class="sec-chevron ${open?'open':''}" id="cv-${id}">▾</span>
+    </div>
+    <div class="sec-body ${open?'':'collapsed'}" id="${id}">${items.map(kwCard).join('')}</div>`;
+  }
+
+  // Build AI findings HTML
+  function renderAIFindings(aiData){
+    if(!aiData) return '';
+    if(aiData.error) return `<div class="ai-result"><div class="ai-result-header"><div class="ai-result-title"><span>✦</span> AI Analysis</div></div><div class="ai-verdict"><strong>Error</strong>❌ ${aiData.error}</div></div>`;
+
+    const sevClass={high:'sev-high',medium:'sev-medium',low:'sev-low',info:'sev-info'};
+    const sevLabel={high:'!',medium:'~',low:'✓',info:'i'};
+    const sevTag={high:'t-danger',medium:'t-warning',low:'t-cat',info:'t-info'};
+    const sevTagLabel={high:'🔴 High Risk',medium:'🟡 Caution',low:'🟢 Low Risk',info:'ℹ Info'};
+
+    const findingsHtml=(aiData.findings||[]).map(f=>`
+      <div class="ai-finding">
+        <div class="ai-finding-top">
+          <div class="ai-finding-sev ${sevClass[f.severity]||'sev-info'}">${sevLabel[f.severity]||'i'}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="ai-finding-title">${escHtml(f.title||'')}</div>
+            <div class="ai-finding-tags">
+              <span class="tag ${sevTag[f.severity]||'t-info'}">${sevTagLabel[f.severity]||'ℹ Info'}</span>
+              ${f.category?`<span class="tag t-cat">${escHtml(f.category)}</span>`:''}
+            </div>
+          </div>
+        </div>
+        <div class="ai-finding-body">
+          ${f.clause?`<div class="ai-clause"><span class="ai-clause-label">From the document</span>${escHtml(f.clause)}</div>`:''}
+          ${f.what?`<div class="ai-section"><span class="ai-section-label">What this means</span><div class="ai-what">${escHtml(f.what)}</div></div>`:''}
+          ${f.whyItMatters?`<div class="ai-section"><span class="ai-section-label">Why it matters</span><div class="ai-why">${escHtml(f.whyItMatters)}</div></div>`:''}
+          ${f.impact?`<div class="ai-section"><span class="ai-section-label">Impact on you</span><div class="ai-impact">${escHtml(f.impact)}</div></div>`:''}
+          ${f.action?`<div class="ai-section"><span class="ai-section-label">What to do</span><div class="ai-action-list">${escHtml(f.action)}</div></div>`:''}
+          ${f.negotiate?`<div class="ai-negotiate"><span>⚖</span>${escHtml(f.negotiate)}</div>`:''}
+        </div>
+      </div>`).join('');
+
+    const totalAI=(aiData.findings||[]).length;
+    const highAI=(aiData.findings||[]).filter(f=>f.severity==='high').length;
+    const medAI=(aiData.findings||[]).filter(f=>f.severity==='medium').length;
+
+    return`<div class="ai-result">
+      <div class="ai-result-header">
+        <div class="ai-result-title">
+          <span>✦</span> AI Analysis
+          ${aiData.docType?`<span class="ai-doc-type">${escHtml(aiData.docType)}</span>`:''}
+        </div>
+        ${aiData.overallScore?`<span style="font-size:12px;color:var(--muted2);">Score <strong style="color:var(--text)">${aiData.overallScore}<span style="font-size:10px;color:var(--muted)">/10</span></strong></span>`:''}
+      </div>
+      ${aiData.parties||aiData.keyDates?`
+        <div class="ai-meta-row">
+          ${aiData.parties?`<div class="ai-meta-item"><span class="ai-meta-label">Parties</span><span class="ai-meta-val">${escHtml(aiData.parties)}</span></div>`:''}
+          ${aiData.keyDates?`<div class="ai-meta-item"><span class="ai-meta-label">Key dates</span><span class="ai-meta-val">${escHtml(aiData.keyDates)}</span></div>`:''}
+        </div>`:''}
+      ${aiData.verdict?`<div class="ai-verdict"><strong>What you're agreeing to</strong>${escHtml(aiData.verdict)}</div>`:''}
+      ${totalAI>0?`
+        <div class="ai-findings-wrap">
+          <div class="ai-findings-label">${totalAI} finding${totalAI!==1?'s':''}&ensp;·&ensp;${highAI} high risk&ensp;·&ensp;${medAI} caution</div>
+          <div class="ai-findings-list">${findingsHtml}</div>
+        </div>`:''}
+      ${aiData.bottomLine?`<div class="ai-bottom-line"><strong>Bottom line</strong>${escHtml(aiData.bottomLine)}</div>`:''}
+    </div>`;
+  }
+
+  const summary=autoSummary(findings,wordCount);
+  const totalFindings=findings.length+(aiData&&!aiData.error?(aiData.findings||[]).length:0);
+
+  document.getElementById('results').innerHTML=`
+    <div class="results-header">
+      <div class="results-title">Analysis Results</div>
+      <div class="export-row">
+        <button class="btn-export" onclick="copySummary()">📋 Copy</button>
+        <button class="btn-export" onclick="exportTxt()">⬇ Save TXT</button>
+      </div>
+    </div>
+
+    <div class="plain-box">
+      <div class="plain-label">Plain English Summary</div>
+      <div class="plain-text">${escHtml(aiData&&aiData.verdict?aiData.verdict:summary)}</div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-n" style="color:${rc.color}">${totalFindings}</div>
+        <div class="metric-l">Findings</div>
+      </div>
+      <div class="metric">
+        <div class="metric-n" style="color:var(--danger)">${dangerCount+(aiData&&!aiData.error?(aiData.findings||[]).filter(f=>f.severity==='high').length:0)}</div>
+        <div class="metric-l">High Risk</div>
+      </div>
+      <div class="metric">
+        <div class="metric-n" style="color:var(--warning)">${warningCount}</div>
+        <div class="metric-l">Caution</div>
+      </div>
+      <div class="metric">
+        <div class="metric-n" style="color:var(--text2)">${readMins}min</div>
+        <div class="metric-l">Read Time</div>
+      </div>
+      <div class="metric">
+        <div class="metric-n" style="color:var(--text2)">${(wordCount/1000).toFixed(1)}k</div>
+        <div class="metric-l">Words</div>
+      </div>
+    </div>
+
+    <div class="risk-banner ${rc.bg}">
+      <div class="risk-icon">${rc.emoji}</div>
+      <div>
+        <div class="risk-title">${rc.label}${aiData&&aiData.docType?' — '+escHtml(aiData.docType):''}</div>
+        <div class="risk-desc">${rc.desc}</div>
+      </div>
+    </div>
+
+    ${renderAIFindings(aiData)}
+
+    ${findings.length>0?`
+      <div class="sec-header" onclick="toggleSection('kwScan')" style="margin-top:24px;">
+        <div class="sec-left">
+          <span class="sec-name">Keyword Scan</span>
+          <span class="sec-badge">${findings.length}</span>
+        </div>
+        <span class="sec-chevron" id="cv-kwScan">▾</span>
+      </div>
+      <div class="sec-body collapsed" id="kwScan">
+        ${section('HIGH RISK',dI,true)}
+        ${section('CAUTION',wI,true)}
+        ${section('INFORMATIONAL',iI,false)}
+      </div>`:
+      findings.length===0&&!aiData?`
+        <div class="ai-no-key">
+          <div class="ai-no-key-icon">🔍</div>
+          <div class="ai-no-key-title">No keyword flags detected</div>
+          <div class="ai-no-key-sub">Our pattern scanner found no common red flags.<br>Add a Claude API key above for a full AI analysis of this document.</div>
+        </div>`:''}
+
+    ${!hasKey?`
+      <div class="ai-no-key" style="margin-top:20px;">
+        <div class="ai-no-key-icon">✦</div>
+        <div class="ai-no-key-title">Add a Claude API key for deeper analysis</div>
+        <div class="ai-no-key-sub">AI analysis identifies important clauses in any document type — contracts, leases, NDAs, employment agreements, and more. Enter your key in the panel above.</div>
+      </div>`:''}
+
+    <div class="disclaimer">
+      <strong>Heads up:</strong> FineRead is an automated tool for informational purposes — not legal advice. AI analysis may miss nuances or make errors. Consult a qualified attorney before signing anything with significant legal or financial consequences.
+    </div>`;
+
+  window._lastFindings=findings;
+  window._lastSummary=aiData?.verdict||summary;
+  window._lastRisk=overallRisk;
+  window._lastAI=aiData;
+}
+
+function toggleSection(id){
+  const body=document.getElementById(id);
+  const chev=document.getElementById('cv-'+id);
+  if(!body)return;
+  body.classList.toggle('collapsed');
+  if(chev)chev.classList.toggle('open');
+}
+
+// ── EXPORT ────────────────────────────────────
+function copySummary(){
+  const findings=window._lastFindings||[];
+  const ai=window._lastAI||null;
+  const lines=[
+    'FineRead Analysis Report','========================','',
+    `Document: ${ai?.docType||'Unknown'}`,
+    ai?.parties?`Parties: ${ai.parties}`:'',
+    `Overall Risk: ${(window._lastRisk||'').toUpperCase()}`,
+    ai?.overallScore?`Risk Score: ${ai.overallScore}/10`:'',
+    ai?.keyDates?`Key Dates: ${ai.keyDates}`:'',
+    '',
+    'WHAT YOU\'RE AGREEING TO','-----------------------',
+    window._lastSummary||'','',
+    ai?.bottomLine?`BOTTOM LINE: ${ai.bottomLine}`:''
+  ];
+  if(ai?.findings?.length){
+    lines.push('','AI FINDINGS','===========');
+    ai.findings.forEach((f,i)=>{
+      lines.push('',`${i+1}. [${(f.severity||'').toUpperCase()}] ${f.title||''}`);
+      if(f.clause)lines.push(`   From document: "${f.clause}"`);
+      if(f.what)lines.push(`   What it means: ${f.what}`);
+      if(f.whyItMatters)lines.push(`   Why it matters: ${f.whyItMatters}`);
+      if(f.impact)lines.push(`   Impact: ${f.impact}`);
+      if(f.action)lines.push(`   What to do: ${f.action}`);
+      if(f.negotiate)lines.push(`   Negotiable? ${f.negotiate}`);
+    });
+  }
+  if(findings.length){
+    lines.push('','KEYWORD FLAGS','=============');
+    findings.forEach(f=>lines.push(`[${f.level.toUpperCase()}] ${f.title}: ${f.desc}`));
+  }
+  lines.push('','Generated by FineRead');
+  navigator.clipboard.writeText(lines.filter(l=>l!==undefined).join('\n')).then(()=>setStatus('✅ Copied!')).catch(()=>setStatus('❌ Clipboard denied.'));
+}
+
+function exportTxt(){
+  const findings=window._lastFindings||[];
+  const ai=window._lastAI||null;
+  const lines=[
+    'FINEREAD ANALYSIS REPORT','========================',
+    `Generated: ${new Date().toLocaleString()}`,
+    `Document: ${ai?.docType||'Unknown'}`,
+    ai?.parties?`Parties: ${ai.parties}`:'',
+    `Overall Risk: ${(window._lastRisk||'').toUpperCase()}`,
+    ai?.overallScore?`Risk Score: ${ai.overallScore}/10`:'',
+    ai?.keyDates?`Key Dates: ${ai.keyDates}`:'',
+    '',
+    'WHAT YOU\'RE AGREEING TO','-----------------------',
+    window._lastSummary||'','',
+    ai?.bottomLine?`BOTTOM LINE: ${ai.bottomLine}`:''
+  ];
+  if(ai?.findings?.length){
+    lines.push('','AI FINDINGS','===========');
+    ai.findings.forEach((f,i)=>{
+      lines.push('',`${i+1}. [${(f.severity||'').toUpperCase()}] ${f.title||''}`);
+      lines.push(`   Category: ${f.category||''}`);
+      if(f.clause)lines.push(`   From document:\n   "${f.clause}"`);
+      if(f.what)lines.push(`   What it means:\n   ${f.what}`);
+      if(f.whyItMatters)lines.push(`   Why it matters:\n   ${f.whyItMatters}`);
+      if(f.impact)lines.push(`   Impact on you:\n   ${f.impact}`);
+      if(f.action)lines.push(`   What to do:\n   ${f.action}`);
+      if(f.negotiate)lines.push(`   Negotiable? ${f.negotiate}`);
+    });
+  }
+  if(findings.length){
+    lines.push('','KEYWORD SCAN FLAGS','==================');
+    findings.forEach(f=>{lines.push(`[${f.level.toUpperCase()}] ${f.title}\n${f.desc}${f.snippet?'\nFound: '+f.snippet:''}`,'');});
+  }
+  lines.push('','DISCLAIMER: Not legal advice. Consult a qualified attorney.');
+  const blob=new Blob([lines.filter(l=>l!==undefined).join('\n')],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='fineread-report.txt';a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── KEYBOARD ──────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();analyze();}
+  if(e.key==='Escape'){document.getElementById('history-panel').classList.remove('open');}
+});
+
+// ── INIT ──────────────────────────────────────
+setTab('paste',document.querySelector('.tab[data-tab="paste"]'));
+loadSavedKey();
+console.log('%cFineRead ready','color:#e2e2e2;font-weight:600;font-size:13px;');
 </script>
 </body>
 </html>
