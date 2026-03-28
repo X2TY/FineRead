@@ -676,6 +676,14 @@ textarea::placeholder{color:var(--muted);}
 .sec-chevron.open{transform:rotate(180deg);}
 .sec-body{padding-top:2px;}
 .sec-body.collapsed{display:none;}
+/* always-open section header */
+.sec-header-static{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0 10px;
+  margin-top:20px;
+  border-top:1px solid var(--border);
+  user-select:none;
+}
 
 /* finding cards */
 .finding{
@@ -699,6 +707,10 @@ textarea::placeholder{color:var(--muted);}
 .t-warning{background:var(--warning-dim);color:var(--warning);border:1px solid var(--warning-border);}
 .t-info{background:var(--info-dim);color:var(--info);border:1px solid rgba(148,163,184,.25);}
 .t-cat{background:var(--surface2);color:var(--muted);border:1px solid var(--border2);}
+/* document category pills */
+.t-obligation{background:rgba(251,191,36,0.10);color:#fbbf24;border:1px solid rgba(251,191,36,0.28);}
+.t-risk{background:rgba(248,113,113,0.10);color:#f87171;border:1px solid rgba(248,113,113,0.28);}
+.t-rights{background:rgba(148,163,184,0.10);color:#94a3b8;border:1px solid rgba(148,163,184,0.28);}
 .finding-body{font-size:13px;color:var(--text2);line-height:1.6;}
 .finding-quote{
   margin-top:10px;padding:10px 14px;
@@ -1214,117 +1226,117 @@ legal@simpleapp.com`
 
 // ── RULES ENGINE ──────────────────────────────
 const RULES=[
-  {id:'data_sale',level:'danger',category:'Data Sale',icon:'💸',
+  {id:'data_sale',level:'danger',category:'Data Sale',docCat:'risk',icon:'💸',
    title:'Your data is sold to third parties',
    desc:'The document explicitly states your personal data can be sold. Strangers can pay for access to your information with little transparency about how it gets used.',
    patterns:[/sell(s|ing)?\s+your\s+(personal\s+)?(information|data)/i,/sale\s+of\s+(personal\s+)?data/i,/monetize\s+your\s+(personal\s+)?data/i]},
 
-  {id:'class_action',level:'danger',category:'Legal Rights',icon:'⚖️',
+  {id:'class_action',level:'danger',category:'Legal Rights',docCat:'rights',icon:'⚖️',
    title:'Class action lawsuit waiver',
    desc:'You give up the right to join a class action lawsuit. This is one of the most harmful clauses — it lets companies avoid mass accountability even when thousands of users are harmed.',
    patterns:[/class\s+action/i,/waive.*right.*class/i,/class.*lawsuit/i]},
 
-  {id:'arbitration',level:'danger',category:'Legal Rights',icon:'🔒',
+  {id:'arbitration',level:'danger',category:'Legal Rights',docCat:'rights',icon:'🔒',
    title:'Mandatory binding arbitration',
    desc:'All disputes go through private arbitration, not courts. You waive your right to a jury trial. Arbitration proceedings heavily favour companies and are not publicly visible.',
    patterns:[/binding\s+(individual\s+)?arbitration/i,/mandatory\s+arbitration/i,/waive.*jury\s+trial/i]},
 
-  {id:'ai_training',level:'danger',category:'AI / Data Use',icon:'🤖',
+  {id:'ai_training',level:'danger',category:'AI / Data Use',docCat:'rights',icon:'🤖',
    title:'Your content trains AI models',
    desc:'The company can use your data or uploaded content to train AI systems. Once used for training, there is no way to remove your contribution from the model.',
    patterns:[/train(ing)?\s+(artificial\s+intelligence|machine\s+learning|ai\s+model|ml\s+model)/i,/ai.*train/i]},
 
-  {id:'perpetual_license',level:'danger',category:'IP Rights',icon:'📋',
+  {id:'perpetual_license',level:'danger',category:'IP Rights',docCat:'rights',icon:'📋',
    title:'Perpetual irrevocable content license',
    desc:"You grant a license that never expires and cannot be revoked — even if you delete your account. The company keeps the right to use your content forever.",
    patterns:[/perpetual.*irrevocable/i,/irrevocable.*perpetual/i,/royalty.?free.*perpetual/i]},
 
-  {id:'liability_trivial',level:'danger',category:'Liability',icon:'💰',
+  {id:'liability_trivial',level:'danger',category:'Liability',docCat:'risk',icon:'💰',
    title:'Liability capped at $1 or trivial amount',
    desc:"The company's maximum financial liability to you is capped absurdly low. Even if they cause serious harm, your ability to recover meaningful damages is essentially zero.",
    patterns:[/liability.*\$1[^0-9]/i,/not exceed.*\$1[^0-9]/i,/maximum.*one dollar/i]},
 
-  {id:'indefinite_retention',level:'danger',category:'Data Retention',icon:'🗃️',
+  {id:'indefinite_retention',level:'danger',category:'Data Retention',docCat:'risk',icon:'🗃️',
    title:'Data retained forever after deletion',
    desc:"Your personal data persists indefinitely even after you delete your account. Closing your account doesn't erase your data from their systems.",
    patterns:[/retain.*indefinitely/i,/indefinite.*retention/i,/even after.*account.*delet/i,/persist.*after.*delet/i]},
 
-  {id:'law_enforcement',level:'danger',category:'Privacy',icon:'🏛️',
+  {id:'law_enforcement',level:'danger',category:'Privacy',docCat:'risk',icon:'🏛️',
    title:'Data shared with law enforcement without notice',
    desc:"The company can hand your data to government agencies or law enforcement without telling you — leaving you no opportunity to contest the disclosure.",
    patterns:[/law enforcement.*without notice/i,/without.*notif.*government/i,/government.*without.*notice/i]},
 
-  {id:'third_party_sharing',level:'warning',category:'Data Sharing',icon:'🤝',
+  {id:'third_party_sharing',level:'warning',category:'Data Sharing',docCat:'risk',icon:'🤝',
    title:'Data shared with third-party partners',
    desc:'Your information may go to external companies for marketing and other purposes well beyond what you signed up for.',
    patterns:[/share.*third.party/i,/third.party.*partner/i,/advertising partner/i,/joint marketing/i]},
 
-  {id:'data_broker',level:'warning',category:'Data Collection',icon:'🗂️',
+  {id:'data_broker',level:'warning',category:'Data Collection',docCat:'risk',icon:'🗂️',
    title:'Data purchased from data brokers',
    desc:'The company buys additional personal information about you from data brokers — companies that harvest data from dozens of sources you may have no knowledge of.',
    patterns:[/data broker/i,/third.party.*data.*provider/i,/purchase.*information.*about you/i]},
 
-  {id:'no_optout',level:'warning',category:'Marketing',icon:'📧',
+  {id:'no_optout',level:'warning',category:'Marketing',docCat:'obligation',icon:'📧',
    title:'Cannot fully opt out of marketing',
    desc:'You cannot unsubscribe from all promotional messages. The company reserves the right to contact you for marketing regardless of your preferences.',
    patterns:[/cannot opt out/i,/may not opt out/i,/no opt.out.*marketing/i,/you cannot unsubscribe from all/i]},
 
-  {id:'policy_no_notice',level:'warning',category:'Policy Changes',icon:'📝',
+  {id:'policy_no_notice',level:'warning',category:'Policy Changes',docCat:'obligation',icon:'📝',
    title:'Policy can change without notice',
    desc:'Terms can be updated at any time. Continuing to use the service auto-accepts changes you may never have read.',
    patterns:[/without.*prior notice/i,/reserve.*right.*update.*at any time/i,/continued use.*constitutes acceptance/i]},
 
-  {id:'geolocation',level:'warning',category:'Location Data',icon:'📍',
+  {id:'geolocation',level:'warning',category:'Location Data',docCat:'risk',icon:'📍',
    title:'Precise GPS location collected',
    desc:'Your exact physical location is tracked. This can reveal where you live, work, worship, or seek medical care.',
    patterns:[/precise\s+geo.?location/i,/exact\s+location/i,/gps.*location/i]},
 
-  {id:'profiling',level:'warning',category:'Profiling',icon:'🧠',
+  {id:'profiling',level:'warning',category:'Profiling',docCat:'risk',icon:'🧠',
    title:'Behavioral profiling and inference',
    desc:'The company builds profiles and makes inferences about your personality, habits, and preferences — far beyond what you knowingly share.',
    patterns:[/inferences.*about.*preferences/i,/profile.*your.*behavior/i,/behavioral.*profil/i,/characteristics.*about you/i]},
 
-  {id:'merger_transfer',level:'warning',category:'Data Transfer',icon:'🏢',
+  {id:'merger_transfer',level:'warning',category:'Data Transfer',docCat:'risk',icon:'🏢',
    title:'Data transferred if company is sold',
    desc:'If the company merges or gets acquired, your data transfers to the new owner who may have entirely different privacy practices.',
    patterns:[/merger.*acquisition/i,/sale of assets.*data/i,/transfer.*data.*business.*transaction/i]},
 
-  {id:'auto_renewal',level:'warning',category:'Billing',icon:'🔄',
+  {id:'auto_renewal',level:'warning',category:'Billing',docCat:'obligation',icon:'🔄',
    title:'Automatic subscription renewal',
    desc:'Subscriptions renew automatically. Missing the cancellation window — sometimes just a day or two — locks you into another full billing period.',
    patterns:[/automatically renew/i,/auto.renew/i,/automatic renewal/i,/renews at the end/i]},
 
-  {id:'termination',level:'warning',category:'Account',icon:'🚫',
+  {id:'termination',level:'warning',category:'Account',docCat:'risk',icon:'🚫',
    title:'Account can be terminated without reason',
    desc:'The company can suspend or delete your account at any time for any reason, potentially with no notice and causing you to lose all your data.',
    patterns:[/terminate.*at any time/i,/suspend.*any reason/i,/without.*cause.*terminat/i,/for any reason.*terminat/i]},
 
-  {id:'jurisdiction',level:'warning',category:'Jurisdiction',icon:'🗺️',
+  {id:'jurisdiction',level:'warning',category:'Jurisdiction',docCat:'obligation',icon:'🗺️',
    title:'Disputes restricted to specific jurisdiction',
    desc:'Legal disputes must be resolved in a specific location, which may be geographically distant and costly for you to pursue.',
    patterns:[/governed by the laws of/i,/exclusive jurisdiction/i,/consent to.*jurisdiction/i,/regardless of where you reside/i]},
 
-  {id:'browsing_history',level:'warning',category:'Data Collection',icon:'🔍',
+  {id:'browsing_history',level:'warning',category:'Data Collection',docCat:'risk',icon:'🔍',
    title:'Browsing history collected',
    desc:'Your web browsing activity is tracked. This can reveal sensitive details about your health, finances, political views, or personal relationships.',
    patterns:[/browsing history/i,/web browsing/i,/pages you visit/i]},
 
-  {id:'content_license',level:'warning',category:'IP Rights',icon:'©️',
+  {id:'content_license',level:'warning',category:'IP Rights',docCat:'rights',icon:'©️',
    title:'Broad license over your content',
    desc:'You grant the company significant rights to reproduce or distribute what you upload, often including commercial use without compensation.',
    patterns:[/royalty.free.*license.*content/i,/license.*reproduce.*modify/i,/worldwide.*license.*publish/i]},
 
-  {id:'device_ids',level:'info',category:'Device Data',icon:'📱',
+  {id:'device_ids',level:'info',category:'Device Data',docCat:'risk',icon:'📱',
    title:'Device identifiers collected',
    desc:'Your device ID or advertising ID is recorded, enabling cross-app and cross-service tracking.',
    patterns:[/device identifier/i,/advertising identifier/i,/IDFA/i,/GAID/i]},
 
-  {id:'cookies',level:'info',category:'Tracking',icon:'🍪',
+  {id:'cookies',level:'info',category:'Tracking',docCat:'risk',icon:'🍪',
    title:'Cookies and tracking technologies',
    desc:'Cookies, pixels, or beacons track your activity across sessions and sometimes across third-party websites.',
    patterns:[/cookies?.*tracking/i,/tracking.*technologies/i,/web beacon/i,/pixel.*track/i]},
 
-  {id:'analytics',level:'info',category:'Analytics',icon:'📊',
+  {id:'analytics',level:'info',category:'Analytics',docCat:'risk',icon:'📊',
    title:'Third-party analytics',
    desc:'External analytics services receive usage data — page views, clicks, session duration — which may be combined with data from other sources.',
    patterns:[/analytics.*partner/i,/third.party.*analytics/i,/google analytics/i,/analytics provider/i]}
@@ -1742,6 +1754,7 @@ function clearAll(){
   document.getElementById('photo-preview').style.display='none';
   document.getElementById('ocr-progress').style.display='none';
   document.getElementById('ocr-bar').style.width='0%';
+  document.getElementById('ocr-label').textContent='Extracting text via OCR…';
   document.getElementById('history-panel').classList.remove('open');
 }
 
@@ -1805,12 +1818,13 @@ async function analyze(){
   let aiData=null;
   const key=document.getElementById('api-key').value.trim();
   if(key){
-    if(document.getElementById('remember-key').checked){
-      try{localStorage.setItem('fr_key',key);}catch{}
-    }
     const keyErr=validKey(key);
     if(keyErr){
       setStatus('⚠ '+keyErr);btn.disabled=false;endProgress();return;
+    }
+    // Only save key after it passes format validation
+    if(document.getElementById('remember-key').checked){
+      try{localStorage.setItem('fr_key',key);}catch{}
     }
     document.getElementById('prog-fill').style.width='72%';
     document.getElementById('prog-label').textContent='AI reading document… (10–20 sec)';
@@ -1851,15 +1865,29 @@ function renderResults({findings,overallRisk,wordCount,readMins,aiData,dangerCou
   const wI=findings.filter(f=>f.level==='warning');
   const iI=findings.filter(f=>f.level==='info');
 
+  // Document category counts for metrics
+  const obligCount=findings.filter(f=>f.docCat==='obligation').length;
+  const riskCount=findings.filter(f=>f.docCat==='risk').length;
+  const rightsCount=findings.filter(f=>f.docCat==='rights').length;
+
+  const docCatLabel={obligation:'Obligation',risk:'Risk',rights:'Rights Waived'};
+  const docCatClass={obligation:'t-obligation',risk:'t-risk',rights:'t-rights'};
+
   function kwCard(f){
     const tc={danger:'t-danger',warning:'t-warning',info:'t-info'}[f.level];
     const tl={danger:'🔴 High Risk',warning:'🟡 Caution',info:'ℹ Info'}[f.level];
+    const dc=f.docCat?docCatClass[f.docCat]||'t-cat':'';
+    const dl=f.docCat?docCatLabel[f.docCat]||f.docCat:'';
     return`<div class="finding">
       <div class="finding-head">
         <div class="finding-ico">${f.icon}</div>
         <div style="flex:1;">
           <div class="finding-title">${escHtml(f.title)}</div>
-          <div class="tags"><span class="tag ${tc}">${tl}</span><span class="tag t-cat">${escHtml(f.category)}</span></div>
+          <div class="tags">
+            <span class="tag ${tc}">${tl}</span>
+            ${dl?`<span class="tag ${dc}">${dl}</span>`:''}
+            <span class="tag t-cat">${escHtml(f.category)}</span>
+          </div>
         </div>
       </div>
       <div class="finding-body">${escHtml(f.desc)}</div>
@@ -1867,14 +1895,12 @@ function renderResults({findings,overallRisk,wordCount,readMins,aiData,dangerCou
     </div>`;
   }
 
-  function section(name,items,open){
+  function section(name,items){
     if(!items.length)return'';
-    const id='s'+name.replace(/\W/g,'');
-    return`<div class="sec-header" onclick="toggleSection('${id}')">
+    return`<div class="sec-header-static">
       <div class="sec-left"><span class="sec-name">${name}</span><span class="sec-badge">${items.length}</span></div>
-      <span class="sec-chevron ${open?'open':''}" id="cv-${id}">▾</span>
     </div>
-    <div class="sec-body ${open?'':'collapsed'}" id="${id}">${items.map(kwCard).join('')}</div>`;
+    <div class="sec-body">${items.map(kwCard).join('')}</div>`;
   }
 
   // Build AI findings HTML
@@ -1955,16 +1981,16 @@ function renderResults({findings,overallRisk,wordCount,readMins,aiData,dangerCou
 
     <div class="metrics">
       <div class="metric">
-        <div class="metric-n" style="color:${rc.color}">${totalFindings}</div>
-        <div class="metric-l">Findings</div>
+        <div class="metric-n" style="color:var(--warning)">${obligCount}</div>
+        <div class="metric-l">Obligations</div>
       </div>
       <div class="metric">
-        <div class="metric-n" style="color:var(--danger)">${dangerCount+(aiData&&!aiData.error?(aiData.findings||[]).filter(f=>f.severity==='high').length:0)}</div>
-        <div class="metric-l">High Risk</div>
+        <div class="metric-n" style="color:var(--danger)">${riskCount}</div>
+        <div class="metric-l">Risks</div>
       </div>
       <div class="metric">
-        <div class="metric-n" style="color:var(--warning)">${warningCount}</div>
-        <div class="metric-l">Caution</div>
+        <div class="metric-n" style="color:var(--info)">${rightsCount}</div>
+        <div class="metric-l">Rights Waived</div>
       </div>
       <div class="metric">
         <div class="metric-n" style="color:var(--text2)">${readMins}min</div>
@@ -1987,18 +2013,15 @@ function renderResults({findings,overallRisk,wordCount,readMins,aiData,dangerCou
     ${renderAIFindings(aiData)}
 
     ${findings.length>0?`
-      <div class="sec-header" onclick="toggleSection('kwScan')" style="margin-top:24px;">
+      <div class="sec-header-static" style="margin-top:24px;">
         <div class="sec-left">
           <span class="sec-name">Keyword Scan</span>
           <span class="sec-badge">${findings.length}</span>
         </div>
-        <span class="sec-chevron" id="cv-kwScan">▾</span>
       </div>
-      <div class="sec-body collapsed" id="kwScan">
-        ${section('HIGH RISK',dI,true)}
-        ${section('CAUTION',wI,true)}
-        ${section('INFORMATIONAL',iI,false)}
-      </div>`:
+      ${section('HIGH RISK',dI)}
+      ${section('CAUTION',wI)}
+      ${section('INFORMATIONAL',iI)}`:
       findings.length===0&&!aiData?`
         <div class="ai-no-key">
           <div class="ai-no-key-icon">🔍</div>
